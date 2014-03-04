@@ -1,0 +1,16 @@
+#version 330
+
+uniform mat4 WORLD;
+uniform mat4 VP;
+
+attribute vec4 _position;
+
+//varying float fogVal;
+
+//const float dens = 0.0001;
+void main()
+{
+	vec4 worldPosition = WORLD*_position;
+	//fogVal = exp(-dens*dot(worldPosition.xyz,worldPosition.xyz));
+	gl_Position = VP*worldPosition;
+}

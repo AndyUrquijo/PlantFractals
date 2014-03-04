@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Source\MatrixStack.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Plant.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLObject.cpp">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLObjectSystem.cpp">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLGeometry.cpp">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLFactory.cpp">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Camera.cpp">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLShape.cpp">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLLoader.cpp">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLShader.cpp">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\main.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WinApp.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLRenderer.cpp">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLImageLoader.cpp">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLText.cpp">
+      <Filter>Source\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Clock.cpp">
+      <Filter>Source\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math.cpp">
+      <Filter>Source\Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\MatrixStack.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Plant.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLObjectSystem.h">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLObject.h">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLGeometry.h">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Camera.h">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLShape.h">
+      <Filter>Source\Graphics Engine\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLFactory.h">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLLoader.h">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLShader.h">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLSharedTypes.h">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WinApp.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLRenderer.h">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLImageLoader.h">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLText.h">
+      <Filter>Source\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Clock.h">
+      <Filter>Source\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math.h">
+      <Filter>Source\Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{7f3b57b4-9949-440c-874c-010070b98a14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{8747c83f-49f0-4669-b61c-72658bf17dfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Graphics Engine">
+      <UniqueIdentifier>{cf4aa516-fafc-4fd9-8f68-e7298fc8fe33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Graphics Engine\Geometry">
+      <UniqueIdentifier>{634a9836-4b56-45e0-aaf4-2096ce9b80bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Core">
+      <UniqueIdentifier>{42b1786c-7932-4576-ba7b-1e22ce4e420f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Utils">
+      <UniqueIdentifier>{de073b45-a4a0-40fb-a0af-0f5ada1cd97d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\ColorShader.fp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\ColorShader.vp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Plant.fp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Plant.gp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Plant.vp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Text.vp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Text.fp">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+</Project>
