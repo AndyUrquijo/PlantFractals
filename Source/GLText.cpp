@@ -13,14 +13,17 @@ using namespace std;
 GLText::GLText( )
 {
 	shape.primitiveType = GL_TRIANGLE_STRIP;
-	shape.indexed = false;
 }
 
 GLText::~GLText( )
 {
 }
 
-
+void GLText::ClearText( )
+{
+	positions.clear( );
+	texCoords.clear( );
+}
 void GLText::AddText( wstring text, Vector2 position )
 {
 	float dx = 0.1f;
@@ -73,9 +76,9 @@ void GLText::AddText( wstring text, Vector2 position )
 void GLText::UpdateText( )
 {
 	glBindVertexArray( shape.vertexArray );
-	shape.size = positions.size( );
-	CreateVertexBuffer( VERTEX_POSITION, 2, GL_FLOAT, &positions[0], sizeof(Vector2) * shape.size );
-	CreateVertexBuffer( VERTEX_TEXTURE, 2, GL_FLOAT, &texCoords[0], sizeof(Vector2) * shape.size );
+	shape.vertexCount = (uint)positions.size( );
+	CreateVertexBuffer( VERTEX_POSITION, 2, GL_FLOAT, &positions[0], sizeof(Vector2) * shape.vertexCount );
+	CreateVertexBuffer( VERTEX_TEXTURE, 2, GL_FLOAT, &texCoords[0], sizeof(Vector2) * shape.vertexCount );
 }
 
 void GLText::DrawText( bool update )
@@ -173,7 +176,10 @@ GLShader GLText::textShader;
 
 void GLText::InitializeText( )
 {
-	textShader.LoadShader( "Shaders/Text.vp", "Shaders/Text.fp",
-						   VERTEX_POSITION, "_position",
-						   VERTEX_TEXTURE, "_texCoord" );
+	textShader.CreateProgram( );
+	textShader.LoadShader( "Shaders/Text.vp", GL_VERTEX_SHADER );
+	textShader.LoadShader( "Shaders/Text.fp", GL_FRAGMENT_SHADER );
+	textShader.BindAttribute( VERTEX_POSITION, "_position" );
+	textShader.BindAttribute( VERTEX_TEXTURE, "_texCoord" );
+	textShader.CompileProgram( );
 }

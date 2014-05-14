@@ -18,9 +18,6 @@ void WinApp::CreateApp( HINSTANCE hinst, WNDPROC proc )
 	application = hinst;
 	appWndProc = proc;
 
-	clientWidth = 1280;
-	clientHeight = 768;
-
 	InitializeExtensions( );
 
 	WNDCLASSEX  wndClass;
@@ -34,7 +31,7 @@ void WinApp::CreateApp( HINSTANCE hinst, WNDPROC proc )
 
 	if ( !RegisterClassEx( &wndClass ) ) ShowErrorMessage( L"Could not register window class" );
 
-	RECT window_size = { 0, 0, clientWidth, clientHeight };
+	RECT window_size = { 0, 0, CLIENT_WIDTH, CLIENT_HEIGHT };
 	AdjustWindowRect( &window_size, WS_OVERLAPPEDWINDOW, false );
 
 	window = CreateWindow( wndClass.lpszClassName, wndClass.lpszClassName, WS_OVERLAPPEDWINDOW & ~( WS_THICKFRAME | WS_MAXIMIZEBOX ),
@@ -93,7 +90,7 @@ void WinApp::InitializeOpenGL( )
 
 	deviceContext = GetDC( window );
 	GLRenderer& renderer = GLRenderer::GetInstance( );
-	renderer.Resize( renderer.GetWidth( ), renderer.GetHeight( ) );
+	renderer.Resize( CLIENT_WIDTH, CLIENT_HEIGHT );
 
 	//*****
 	int nPixCount = 0;

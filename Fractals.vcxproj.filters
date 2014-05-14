@@ -127,12 +127,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\ColorShader.fp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\ColorShader.vp">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\Plant.fp">
       <Filter>Shaders</Filter>
     </None>
@@ -146,6 +140,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\Text.fp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Plant.cp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

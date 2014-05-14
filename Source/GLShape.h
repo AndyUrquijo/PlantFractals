@@ -5,11 +5,26 @@
 struct GLShape
 {
 	GLuint vertexArray;
-	GLuint size;
-	bool indexed;
+	
+	GLuint vertexBuffer;
+	GLuint indexBuffer;
+	
+	GLuint indexCount;
+	//GLuint vertexCount;
+
+	GLenum primitiveType;
+
+
+	void Draw( );
+};
+
+struct GLSimpleShape
+{
+	GLuint vertexArray;
+	GLuint vertexBuffer;
+	GLuint vertexCount;
 
 	GLenum primitiveType;
 
 	void Draw( );
 };
-

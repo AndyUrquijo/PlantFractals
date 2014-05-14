@@ -6,7 +6,6 @@
 #include <memory>
 #include <cstdlib>
 
-#include <math3d.h>
 #include <algorithm>
 
 
@@ -177,15 +176,30 @@ namespace Math
 									 float minTheta, float maxTheta,
 									 float minPhi, float maxPhi )
 	{
-		Vector3 xAxis, yAxis;
-		xAxis = { 1, 0, 0 };
-		yAxis = { 0, 1, 0 };
-		Vector3& perpendicular = abs( xAxis*vector ) > abs( yAxis*vector ) ? yAxis : xAxis; //choose the less colinear axis
+		//Vector3 xAxis, yAxis;
+		//xAxis = { 1, 0, 0 };
+		//yAxis = { 0, 1, 0 };
+		//Vector3& perpendicular = abs( xAxis*vector ) > abs( yAxis*vector ) ? yAxis : xAxis; //choose the less colinear axis
+#define ARBITRARY {0.57735026f, 0.57735026f, 0.57735026f}
+		Vector3 perpendicular = ARBITRARY;
 		perpendicular = vector.Cross( perpendicular );
 		float theta = Math::UnitRand( )*( maxTheta - minTheta ) + minTheta; // Polar angle or angle from cenit (original direction)
 		perpendicular = perpendicular.Rotate( theta, vector.Normalize( ) );
 		float phi = Math::UnitRand( )*( maxPhi - minPhi ) + minPhi; // Azimuthal angle or angle in the plane perpendicular to the original vector
 		return vector.Rotate( phi, perpendicular );
+	}
+
+	Vector3 Vector3::Randomize( const Vector3& min, const Vector3& max )
+	{
+		Vector3 random;
+		random.x= RangeRand(min.x, max.x);
+		random.y= RangeRand(min.y, max.y);
+		random.z= RangeRand(min.z, max.z);
+		return random;
+	}
+	Vector3 Vector3::Randomize( const Vector2& xRange, const Vector2& yRange, const Vector2& zRange )
+	{
+		return Randomize( { xRange.x, yRange.x, zRange.x }, { xRange.y, yRange.y, zRange.y } );
 	}
 
 	// --- Global functions ---
@@ -352,6 +366,15 @@ namespace Math
 		return prd;
 	}
 
+	Matrix44 Matrix44::operator*( float scalar ) const
+	{
+		Matrix44 prd;
+		for ( int i = 0; i < 16; i++ )
+			prd.elm[i] = this->elm[i] * scalar;
+		return prd;
+	}
+
+
 	Matrix44& Matrix44::operator*=( const Matrix44& matrix )
 	{
 		return *this = *this*matrix;
@@ -366,12 +389,12 @@ namespace Math
 		return transpose;
 	}
 
-	Matrix44 Matrix44::Inverse( ) const
-	{
-		Matrix44 inverse;
-		m3dInvertMatrix44( inverse.elm, this->elm );
-		return inverse;
-	}
+	//Matrix44 Matrix44::Inverse( ) const
+	//{
+	//	Matrix44 inverse;
+	//	m3dInvertMatrix44( inverse.elm, this->elm );
+	//	return inverse;
+	//}
 
 
 	// --- Static functions ---
@@ -442,11 +465,38 @@ namespace Math
 		return zRotation;
 	}
 
-	Matrix44 Matrix44::MakePerspectiveMatrix( float fov, float aspect, float zMin, float zMax )
+	Matrix44 Matrix44::MakeProjectionMatrix( float fov, float aspect, float zMin, float zMax )
 	{
-		Matrix44 perspective;
-		m3dMakePerspectiveMatrix( perspective.elm, fov, aspect, zMin, zMax );
-		return perspective;
+		//code adapted from directX
+		Matrix44 proj;
+		float    SinFov = sin( fov*0.5f );
+		float    CosFov = cos( fov*0.5f );
+
+		float Height = CosFov / SinFov;
+		float Width = Height / aspect;
+		float fRange = zMax / ( zMax - zMin );
+
+		proj.m[0][0] = Width;
+		proj.m[0][1] = 0.0f;
+		proj.m[0][2] = 0.0f;
+		proj.m[0][3] = 0.0f;
+
+		proj.m[1][0] = 0.0f;
+		proj.m[1][1] = Height;
+		proj.m[1][2] = 0.0f;
+		proj.m[1][3] = 0.0f;
+
+		proj.m[2][0] = 0.0f;
+		proj.m[2][1] = 0.0f;
+		proj.m[2][2] = fRange;
+		proj.m[2][3] = 1.0f;
+
+		proj.m[3][0] = 0.0f;
+		proj.m[3][1] = 0.0f;
+		proj.m[3][2] = -fRange * zMin;
+		proj.m[3][3] = 0.0f;
+
+		return proj;
 	}
 
 

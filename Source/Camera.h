@@ -17,5 +17,7 @@ class Camera
 	void MoveCamera();
 
 	Math::Matrix44 MakeViewMatrix( ) const;
+
+	Math::Vector3 GetForward() const;
 };
 

@@ -1,40 +1,110 @@
 #include "GLShader.h"
-#include <GLTools.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 
 #include "GLRenderer.h"
 #include "WinApp.h"
+#include <fstream>
+using namespace std;
 
-GLShader::GLShader( )
+#include <GL\glew.h>
+#include <GL\wglew.h>
+#include <GL\GL.h>
+
+
+void GLShader::CreateProgram( )
 {
+	program = glCreateProgram( );
+}
+
+GLuint GLShader::LoadShader( PCSTR filePath, GLenum type )
+{
+	// Read source file
+
+	ifstream ifs( filePath, ios_base::in | ios_base::binary );
+	if ( !ifs.is_open( ) ) WinApp::ShowErrorMessage( L"Could not open the shader file" );
+
+	ifs.seekg( 0, std::ios::end );
+	GLint sourceSize = (GLint)ifs.tellg( );
+	ifs.seekg( 0, std::ios::beg );
+
+	GLchar* source = new GLchar[sourceSize];
+	ifs.read( source, sourceSize );
+	ifs.close( );
+
+	// Create & Compile Shader
+
+	GLuint shaderID = glCreateShader( type );
+
+	glShaderSource( shaderID, 1, (const GLchar**)&source, &sourceSize );
+	glCompileShader( shaderID );
+
+	// Verify shader
+
+	GLint isCompiled = 0;
+	glGetShaderiv( shaderID, GL_COMPILE_STATUS, &isCompiled );
+	if ( isCompiled == GL_FALSE )
+	{
+		GLint maxLength = 0;
+		glGetShaderiv( shaderID, GL_INFO_LOG_LENGTH, &maxLength );
+
+		GLchar* infoLog = new GLchar[maxLength];
+		glGetShaderInfoLog( shaderID, maxLength, &maxLength, infoLog );
+
+		wchar_t* winfoLog = new wchar_t[maxLength];
+		for ( GLint i = 0; i < maxLength; i++ )
+			winfoLog[i] = (wchar_t) infoLog[i];
+		WinApp::ShowErrorMessage( winfoLog );
+
+		glDeleteShader( shaderID );
+	}
+	glAttachShader( program, shaderID );
+
+	return shaderID;
+}
+
+void GLShader::BindAttribute( GLuint index, PCSTR attribute )
+{
+	glBindAttribLocation( program, index, attribute );
 }
 
 
-GLShader::~GLShader( )
+void GLShader::CompileProgram(  )
 {
-}
+	glLinkProgram( program );
 
-void GLShader::LoadShader( const char* vsName, const char* fsName, uint loc0, const char* name0 )
-{
-	shaderHandle = gltLoadShaderPairWithAttributes( vsName, fsName, 1, loc0, name0 );
-	if ( !shaderHandle ) WinApp::ShowErrorMessage(L"The shader could not be loaded", L"Error" );
-}
-void GLShader::LoadShader( const char* vsName, const char* fsName, uint loc0, const char* name0, uint loc1, const char* name1 )
-{
-	shaderHandle = gltLoadShaderPairWithAttributes( vsName, fsName, 2, loc0, name0, loc1, name1 );
-	if ( !shaderHandle ) WinApp::ShowErrorMessage(L"The shader could not be loaded", L"Error" );
+	GLint numShaders = 0;
+	glGetProgramiv( program, GL_ATTACHED_SHADERS, &numShaders );
+	GLuint* shaders = new GLuint[numShaders];
+	glGetAttachedShaders( program, numShaders, &numShaders, shaders );
+	for ( GLint i = 0; i < numShaders; i++ )
+		glDeleteShader( shaders[i] );
+	delete[] shaders;
+
+	GLint isCompiled = 0;
+	glGetProgramiv( program, GL_LINK_STATUS, &isCompiled );
+	if ( isCompiled == GL_FALSE )
+	{
+		GLint maxLength = 0;
+		glGetProgramiv( program, GL_INFO_LOG_LENGTH, &maxLength );
+		GLchar* infoLog = new GLchar[maxLength];
+		glGetProgramInfoLog( program, maxLength, &maxLength, infoLog );
+
+		wchar_t* winfoLog = new wchar_t[maxLength];
+		for ( GLint i = 0; i < maxLength; i++ )
+			winfoLog[i] = (wchar_t) infoLog[i];
+		WinApp::ShowErrorMessage( winfoLog );
+
+		glDeleteProgram( program );
+	}
 }
 
 void GLShader::ObtainUniform( Uniform uniform, const char * name )
 {
-	uniforms[uniform] = glGetUniformLocation( shaderHandle, name );
-	if ( uniforms[uniform] < 0 ) WinApp::ShowErrorMessage(L"One of the uniforms in the shader was not loaded", L"Error" );
+	uniforms[uniform] = glGetUniformLocation( program, name );
+	if ( uniforms[uniform] < 0 ) WinApp::ShowErrorMessage( L"One of the uniforms in the shader was not loaded", L"Error" );
 }
 
 void GLShader::Use( )
 {
-	glUseProgram( shaderHandle );
+	glUseProgram( program );
 	GLRenderer::SetShader( this );
 }

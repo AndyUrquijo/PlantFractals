@@ -1,7 +1,8 @@
 #include "GLObject.h"
 #include "GLRenderer.h"
-#include <math3d.h>
+//#include <math3d.h>
 
+#include "Math.h"
 using namespace Math;
 
 GLObject::GLObject( )
@@ -39,8 +40,7 @@ void GLObject::Draw( bool preserveStack )
 
 void GLObject::Translate( GLSpace space, float x, float y, float z )
 {
-	Matrix44 translate;
-	m3dTranslationMatrix44( translate.elm, x, y, z );
+	Matrix44 translate = Matrix44::MakeTranslation( { x, y, z } );
 	switch ( space ) 	{
 	case GL_LOCAL: localTransform = translate*localTransform; return;
 	case GL_WORLD: worldTransform = translate*worldTransform; return;
@@ -49,8 +49,7 @@ void GLObject::Translate( GLSpace space, float x, float y, float z )
 
 void GLObject::Scale( GLSpace space, float ratio )
 {
-	Matrix44 scale;
-	m3dScaleMatrix44( scale.elm, ratio, ratio, ratio );
+	Matrix44 scale = Matrix44::MakeIdentity()*ratio;
 	switch ( space ) 	{
 	case GL_LOCAL: localTransform = scale*localTransform; return;
 	case GL_WORLD: worldTransform = scale*worldTransform; return;
@@ -59,31 +58,33 @@ void GLObject::Scale( GLSpace space, float ratio )
 
 void GLObject::Scale( GLSpace space, float x, float y, float z )
 {
-	Matrix44 scale;
-	m3dScaleMatrix44( scale.elm, x, y, z );
+	Matrix44 scale = Matrix44::MakeIdentity();
+	scale.m[0][0] *= x;
+	scale.m[1][1] *= y;
+	scale.m[2][2] *= z;
 	switch ( space ) 	{
 	case GL_LOCAL: localTransform = scale*localTransform; return;
 	case GL_WORLD: worldTransform = scale*worldTransform; return;
 	}
 }
 
-void GLObject::Rotate( GLSpace space, float angle, float axisX, float axisY, float axisZ )
-{
-	Matrix44 rotate;
-	m3dRotationMatrix44( rotate.elm, angle, axisX, axisY, axisZ );
-	switch ( space ) 	{
-	case GL_LOCAL: localTransform = rotate*localTransform; return;
-	case GL_WORLD: worldTransform = rotate*worldTransform; return;
-	}
-}
+//void GLObject::Rotate( GLSpace space, float angle, float axisX, float axisY, float axisZ )
+//{
+//	Matrix44 rotate = Matrix44::MakeYRotation(angle)*MAtrk
+//	m3dRotationMatrix44( rotate.elm, angle, axisX, axisY, axisZ );
+//	switch ( space ) 	{
+//	case GL_LOCAL: localTransform = rotate*localTransform; return;
+//	case GL_WORLD: worldTransform = rotate*worldTransform; return;
+//	}
+//}
 
-void GLObject::Orbit( GLSpace space, float angle, float axisX, float axisY, float axisZ )
-{
-	Matrix44 orbit;
-	m3dRotationMatrix44( orbit.elm, angle, axisX, axisY, axisZ );
-	switch ( space ) 	{
-	case GL_LOCAL: localTransform = orbit*localTransform; return;
-	case GL_WORLD: worldTransform = orbit*worldTransform; return;
-	}
-
-}
+//void GLObject::Orbit( GLSpace space, float angle, float axisX, float axisY, float axisZ )
+//{
+//	Matrix44 orbit;
+//	m3dRotationMatrix44( orbit.elm, angle, axisX, axisY, axisZ );
+//	switch ( space ) 	{
+//	case GL_LOCAL: localTransform = orbit*localTransform; return;
+//	case GL_WORLD: worldTransform = orbit*worldTransform; return;
+//	}
+//
+//}

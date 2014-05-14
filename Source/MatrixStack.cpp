@@ -1,34 +1,38 @@
 #include "MatrixStack.h"
 
-#include <GLMatrixStack.h>
 
 MatrixStack::MatrixStack( )
 {
-	matrixStack = new GLMatrixStack;
+	current = Matrix44::MakeIdentity();
 }
 
 
 MatrixStack::~MatrixStack( )
 {
-	delete matrixStack;
 }
 
 void MatrixStack::PushMatrix( )
 {
-	matrixStack->PushMatrix();
+	matrices.push( current );
 }
 
 void MatrixStack::PopMatrix( )
 {
-	matrixStack->PopMatrix();
+	current = matrices.top();
+	matrices.pop();
 }
 
 void MatrixStack::MultMatrix( const Matrix44& matrix )
 {
-	matrixStack->MultMatrix(matrix.elm);
+	//Matrix44 back = matrices.back();
+	//back *= matrix;
+	//
+	//matrix.pop();
+	//matrix.push(back);
+	current *= matrix;
 }
 
 Matrix44 MatrixStack::GetMatrix( ) const
 {
-	return matrixStack->GetMatrix();
+	return current;
 }

@@ -14,6 +14,8 @@ typedef Matrix44	FLOAT4X4;
 typedef GLushort	ushort;	
 typedef GLuint		uint;	
 
+typedef const char* PCSTR;
+
 #else
 
 typedef float			FLOAT;

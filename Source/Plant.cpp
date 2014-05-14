@@ -6,129 +6,250 @@
 #include "GLSharedTypes.h"
 #include <algorithm> //max, min
 #include <memory>
+#include <ctime>
+
+#include <Windows.h>
+
+#include "WinApp.h"
 
 using Math::Vector3;
 
-Plant::Plant( )
-{
-}
+float			Plant::timeVal;
+vector<Plant>	Plant::plantArray;
+
+//GLuint		Plant::staticPositionsBuffer;
+GLuint			Plant::dynamicPositionsBuffer;
 
 
-Plant::~Plant( )
+Vector3 Transorm( const Vector3& Ro, uint index )
 {
-}
+#define PHI 0.03f*PI
+#define THETA 0.66f*PI
 
-void BranchingFunction( int level, int* min, int* max )
-{
-#define PHASE 5
-	if ( level < PHASE )
+	Vector3 R;
+	if ( index == 3 )
 	{
-		*min = level / 2 + 1;
-		*max = ( level*level ) / 4 + 1;
+		R = Ro*0.9f;
 	}
 	else
 	{
-		*min = std::max( 0, PHASE / 2 + ( PHASE - level ) / 2 );
-		*max = std::max( 0, PHASE * PHASE / 4 - ( PHASE - level )*( PHASE - level ) / 4 );
+		float phi = PHI;
+		float theta = index*THETA;
+
+		R = Vector3::RandomRotation( Ro, theta, theta, phi, phi );
+		R = R.Normalize( )*Ro.Length( )*0.6f;
 	}
+	return R;
 }
 
+// ----------------
+// --- Creation ---
+// ----------------
 
-
-void Plant::Grow( )
+void Plant::Create( )
 {
+#define CHILD_AMOUNT 4
+#define LAST_LEVEL 7
 #define BASE_LENGTH 10.0f
 
-	//location = { 0, 0, 0 };
 
-	Component child;
-	child.parentIndex = 0;
-	components.push_back( child );
-	int level, min, max;
-	int currLevelNum;
-	int nextLevelNum;
-	int numChildren;
-	float angle;
-	Math::Vector3 axis;
+	// --- Initialize tree structure ---
 
-	//Root element
-	level = 0;
+	Component comp;
+	comp.parentIndex = 0;
+	comp.firstChildIndex = 1;
+	comp.childCount = 1;
+	components.push_back( comp );
 
-	child.displacement = { 0, 0, 0 };
-	child.parentIndex = 0;
-	components.push_back( child );
-	child.displacement = { 0, BASE_LENGTH, 0 };
-	components.push_back( child );
+	comp.parentIndex = 0;
+	comp.firstChildIndex = 2;
+	comp.childCount = CHILD_AMOUNT;
+	components.push_back( comp );
 
-	currLevelNum = 1;
-	nextLevelNum = 1;
+	comp = { };
+	uint level = 1;
+	uint currLevelLeft = 1;
+	uint nextLevelCount = CHILD_AMOUNT;
 
-	for ( uint iComp = 2; iComp < components.size( ); iComp++ )
+	for ( uint iComp = 1; iComp < components.size( ); iComp++ )
 	{
-		if ( --currLevelNum == 0 ) // Reached next level in the tree
+		if ( currLevelLeft == 0 ) // Reached next level in the tree
 		{
-			if ( ++level == 8 )
+			if ( ++level == LAST_LEVEL )
 				break;
-			currLevelNum = nextLevelNum;
-			nextLevelNum = 0;
+			currLevelLeft = nextLevelCount;
+			nextLevelCount = 0;
 		}
 
-		numChildren = 3;
-		nextLevelNum += numChildren;
-		float theta = 0;
-		float phi = 0.03*PI;
-		for ( uint iChild = 0; iChild < numChildren; iChild++ )
-		{
-			theta += 2 * PI / float( numChildren );
-			child.displacement = Vector3::RandomRotation( components[iComp].displacement,
-														  theta, theta, phi, phi );
-			child.displacement = child.displacement.Normalize( );
-			child.parentIndex = iComp;
-			child.displacement *= components[child.parentIndex].displacement.Length()*0.7f;
-			//;*pow( 0.7f, float( level ) );
-			components.push_back( child );
-		}
+		components[iComp].firstChildIndex = (int) components.size( );
+		components[iComp].childCount = CHILD_AMOUNT;
+
+		nextLevelCount += CHILD_AMOUNT;
+		currLevelLeft--;
+		comp.parentIndex = iComp;
+		comp.firstChildIndex = 0;
+		comp.childCount = 0;
+
+		for ( uint iChild = 0; iChild < CHILD_AMOUNT; iChild++ )
+			components.push_back( comp );
 	}
-}
 
-void Plant::InitializeObject( )
-{
+	// --- Initialize tree data ---
+
+	staticPositions.resize( components.size( ) );
+
+
+	staticPositions[0] = Vector4( location, 1 );
+	staticPositions[1] = { 0, BASE_LENGTH, 0, 1 };
+	for ( uint i = 2; i < components.size( ); i++ )
+	{
+		uint parent = components[i].parentIndex;
+		uint childnumber = i - components[parent].firstChildIndex;
+		staticPositions[i] = Vector4( Transorm( Vector3( staticPositions[parent] ), childnumber ), 0 );
+		components[i].delay = RangeRand( 0, 2 * Math::PI );
+	}
+
+	// --- Initialize buffer data ---
+
 	GLShape& shape = object.shape;
-	const uint numComp = components.size( );
-	shape.size = numComp * 2;
-	shape.indexed = true;
+	const uint numComp = (uint) components.size( );
+	shape.indexCount = numComp * 2;
+	//?? shape.vertexCount = numComp * 2;
 	shape.primitiveType = GL_LINES;
 
-	Vector3* positions = new Vector3[numComp];
-	memset( positions, 0, sizeof(Vector3) *numComp );
 	ushort* indices = new ushort[numComp * 2];
-
-	uint iCurr;
+	memset( indices, 0, sizeof(ushort) *numComp * 2 );
 
 	for ( uint iComp = 1; iComp < numComp; iComp++ )
 	{
-		iCurr = iComp;
-		while ( iCurr != 0 )
-		{
-			positions[iComp] += components[iCurr].displacement;
-			iCurr = components[iCurr].parentIndex;
-		}
-		positions[iComp] += components[0].displacement;
-
 		indices[iComp * 2] = components[iComp].parentIndex;
 		indices[iComp * 2 + 1] = iComp;
 	}
 
-
 	glGenVertexArrays( 1, &shape.vertexArray );
 	glBindVertexArray( shape.vertexArray );
 
-	GLFactory::CreateVertexBuffer( VERTEX_POSITION, 3, GL_FLOAT, positions, sizeof(Vector3) * numComp );
-	GLFactory::CreateIndexBuffer( indices, sizeof(ushort) *numComp * 2 );
+	shape.vertexBuffer = GLFactory::CreateVertexBuffer( VERTEX_POSITION, 4, GL_FLOAT, NULL, sizeof(Vector4) * numComp );
+	shape.indexBuffer = GLFactory::CreateIndexBuffer( indices, sizeof(ushort) *numComp * 2 );
 
-	delete[] positions;
 	delete[] indices;
+
+	timeVal = 1.0f;
+
+
+
+	// Initialize GPU buffer with static positions
+	staticPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) *GetComponentCount( ) );
+
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticPositionsBuffer );
+
+	Vector4* positions = (Vector4*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
+	if ( !positions ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
+
+
+	for ( uint iComp = 0; iComp < components.size( ); iComp++ )
+		positions[iComp] = staticPositions[iComp];
+
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	dynamicPositions.resize( components.size( ) );
+
 }
+
+
+// --------------
+// --- Update ---
+// --------------
+
+
+void Plant::UpdateObject( )
+{
+	GLShape& shape = object.shape;
+
+	glBindVertexArray( shape.vertexArray );
+	glBindBuffer( GL_ARRAY_BUFFER, shape.vertexBuffer );
+
+	Vector4* positions = (Vector4*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
+	positions[0] = { 0, 0, 0, 1 };
+	for ( uint iComp = 1; iComp < shape.indexCount / 2; iComp++ )
+	{
+		uint iParent = components[iComp].parentIndex;;
+		positions[iComp] = dynamicPositions[iComp] + positions[iParent];
+	}
+	glUnmapBuffer( GL_ARRAY_BUFFER );
+}
+
+
+
+void Plant::Update( )
+{
+	dynamicPositions[0] = staticPositions[0];
+
+	float t = Plant::timeVal;
+	Vector3 wind = { -1, 0, 0 };
+	wind *= 0.5f;
+
+	for ( uint i = 1; i < components.size( ); i++ )
+	{
+		Vector3 R = (Vector3) dynamicPositions[i];
+		Vector3 Ro = (Vector3) staticPositions[i];
+
+		//float d = components[i].delay;
+
+		float r = Ro.Length( );
+
+		float Wf = Ro.Cross( wind ).Length( );
+		Vector3 Wo = Ro + sqrt( Wf ) *wind; // equilibrium position with wind
+		Wo = Wo.Normalize( )*r;
+
+		float Ao = acos( ( Ro*Wo ) / ( r*r ) ); //angle between Wo and Ro
+
+		Vector3 n = Ro.Cross( Wo ).Normalize( );	//unit vector normal to Rp and Wo
+		float w = 10.0f / r;		//oscilation frequency
+
+		R = Wo.Rotate( 0.3f*Ao*sin( w*t ), n );
+
+		dynamicPositions[i] = Vector4( R, 0 );
+	}
+
+}
+
+void Plant::UpdateWithCompute( )
+{
+
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticPositionsBuffer );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicPositionsBuffer );
+
+	uint numComponents = plantArray[0].GetComponentCount( );
+
+	glDispatchCompute( numComponents, 1, 1 );
+	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+
+
+	ReadDynamicData( );
+
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, 0 );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, 0 );
+
+}
+
+void Plant::ReadDynamicData( )
+{
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicPositionsBuffer );
+
+	Vector4* positions = (Vector4*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
+	if ( !positions ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
+
+	memcpy_s( &dynamicPositions[0], sizeof(Vector4) *dynamicPositions.size( ), positions, sizeof(Vector4) *dynamicPositions.size( ) );
+
+	//for ( uint iComp = 0; iComp < components.size( ); iComp++ )
+	//	dynamicPositions[iComp] = positions[iComp];
+
+	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
+
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, 0 );
+}
+
 
 void Plant::Draw( )
 {

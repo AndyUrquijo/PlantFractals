@@ -4,18 +4,21 @@
 
 #include "GLGeometry.h"
 #include "GLSharedTypes.h"
+#include "GLFactory.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #undef DrawText
 
+#include "Clock.h"
+#include <sstream>
+
+
+#include <thread>
 
 GLRenderer GLRenderer::instance;
 GLShader* GLRenderer::currShader;
 
-GLRenderer::GLRenderer( void ) : screenWidth( 800 ), screenHeight( 600 ), bFullScreen( false ), initialized(false)
-{
-}
 
 void GLRenderer::Initialize( void )
 {
@@ -23,49 +26,51 @@ void GLRenderer::Initialize( void )
 
 	glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
 
-	groundShader.LoadShader( "Shaders/ColorShader.vp", "Shaders/ColorShader.fp",
-							 VERTEX_POSITION, "_position",
-							 VERTEX_COLOR, "_color" );
-	groundShader.ObtainUniform( WORLD, "WORLD" );
-	groundShader.ObtainUniform( VP, "VP" );
-
-
-	plantShader.LoadShader( "Shaders/Plant.vp", "Shaders/Plant.fp",
-							VERTEX_POSITION, "_position" );
+	plantShader.CreateProgram( );
+	plantShader.LoadShader( "Shaders/Plant.vp", GL_VERTEX_SHADER );
+	plantShader.LoadShader( "Shaders/Plant.gp", GL_GEOMETRY_SHADER );
+	plantShader.LoadShader( "Shaders/Plant.fp", GL_FRAGMENT_SHADER );
+	plantShader.BindAttribute( VERTEX_POSITION, "_position" );
+	plantShader.CompileProgram( );
 	plantShader.ObtainUniform( WORLD, "WORLD" );
 	plantShader.ObtainUniform( VP, "VP" );
 
+	plantComputeShader.CreateProgram( );
+	plantComputeShader.LoadShader( "Shaders/Plant.cp", GL_COMPUTE_SHADER );
+	plantComputeShader.CompileProgram( );
+	plantComputeShader.ObtainUniform( TIME, "TIME" );
 
-	//camera.Translate( { 0, 0, 60 } );
+	camera.position = { 0, 10, 0 };
 
-	InitializeObjects();
+	InitializeObjects( );
 
 	GLText::InitializeText( );
-	text.LoadFont("Book Antiqua Bold 24.bff");
+	text.LoadFont( "Book Antiqua Bold 24.bff" );
 	text.AddText( L"Testy123", { 0.1f, 0.1f } );
 	text.AddText( L"Hola", { 0.15f, 0.05f } );
 
-	initialized = true;
+	/* //Simulate work
+	for ( size_t i = 0; i < 3; i++ )
+	( new std::thread( []{ while ( true ); } ) )->detach( );
+	*/
 }
+
+
 
 void GLRenderer::InitializeObjects( void )
 {
-	GLGeometry::CUBE_DESC cubeDesc;
-	cubeDesc.dimensions = { 1, 1, 1 };
-	cubeObj.shape = GLGeometry::MakeCube( cubeDesc );
-	cubeObj.Translate( GL_WORLD, 0, 3, 0 );
+	Plant::plantArray.resize( 10 );
 
-
-	numPlants = 70;
-	plants = new Plant[numPlants];
-	for ( UINT i = 0; i < numPlants; i++ )
+	for ( UINT i = 0; i < Plant::plantArray.size( ); i++ )
 	{
-		plants[i].location.x = Math::RangeRand( -100, 100 );
-		plants[i].location.z = Math::RangeRand( -100, 100 );
-		plants[i].location.y = 0;
-		plants[i].Grow( );
-		plants[i].InitializeObject( );
+		Plant::plantArray[i].location = Vector3::Randomize( { -50, 50 }, { 0, 0 }, { -50, 50 } );
+		Plant::plantArray[i].Create( );
 	}
+
+	uint numComponents = Plant::plantArray[0].GetComponentCount( );
+	//Plant::staticPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) *numComponents );
+	Plant::dynamicPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) * numComponents );
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -84,9 +89,7 @@ void GLRenderer::Resize( GLsizei nWidth, GLsizei nHeight )
 {
 	glViewport( 0, 0, nWidth, nHeight );
 
-	// This is a good place to recompute your projection matrix.
-	projMatrix = Matrix44::MakePerspectiveMatrix( 0.333f*PI, float( nWidth ) / float( nHeight ), 1.0f, 1000.0f );
-	//m3dMakePerspectiveMatrix( projMatrix, m3dDegToRad( 60.0f ), float( nWidth ) / float( nHeight ), 1.0f, 1000.0f );
+	projMatrix = Matrix44::MakeProjectionMatrix( 0.333f*PI, float( nWidth ) / float( nHeight ), 1.0f, 1000.0f );
 }
 
 
@@ -95,40 +98,98 @@ void GLRenderer::Resize( GLsizei nWidth, GLsizei nHeight )
 // flushes, etc.
 void GLRenderer::Render( void )
 {
-	if( !initialized ) 
-		return;
+	text.ClearText( );
+
+	static Clock clock;
+	static int counter = 0;
+	static float timer = 0;
+	static float lastMark = 0;
+	static float fps = 0;
+	timer = (float) clock.Watch( );
+	counter++;
+	if ( counter == 10 )
+	{
+		fps = 10 / ( timer - lastMark );
+		counter = 0;
+		lastMark = timer;
+	}
+
+
+	std::wstringstream ss;
+	ss << L"FPS: " << fps;
+	text.AddText( ss.str( ), { -0.95f, +0.95f } );
+
+	ss.str( L"" );
+	ss << "Camera Pos: (" << camera.position.x << ", " << camera.position.y << ", " << camera.position.z << ")";
+	text.AddText( ss.str( ), { -0.95f, +0.90f } );
+
+	ss.str( L"" );
+	ss << "Camera Vel: (" << camera.velocity.x << ", " << camera.velocity.y << ", " << camera.velocity.z << ")";
+	text.AddText( ss.str( ), { -0.95f, +0.85f } );
+
+	ss.str( L"" );
+	ss << "Camera Ang: (" << camera.orientation.x*( 180 / 3.14f ) << ", " << camera.orientation.y*( 180 / 3.14f ) << ", " << camera.orientation.z*( 180 / 3.14f ) << ")";
+	text.AddText( ss.str( ), { -0.95f, +0.80f } );
 
 	wglMakeCurrent( WinApp::deviceContext, WinApp::renderContext );
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	matrixStack.PushMatrix( );
+
+	if ( GetAsyncKeyState( 'P' ) )
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	else
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+
 
 	camera.MoveCamera( );
 
-	Math::Matrix44 viewProjection = camera.MakeViewMatrix( ).Inverse( )*projMatrix;
+	Math::Matrix44 viewProjection = camera.MakeViewMatrix( )*projMatrix;
 	glClear( GL_COLOR_BUFFER_BIT );
 	glClear( GL_DEPTH_BUFFER_BIT );
 
 
 
+	static Clock plantClock;
+	Plant::timeVal = plantClock.Watch( );
 
-	groundShader.Use( );
-	glUniformMatrix4fv( groundShader.GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
+#define USE_COMPUTE
 
-	cubeObj.Draw( );
+#ifdef USE_COMPUTE
+	plantComputeShader.Use( );
+	glUniform1f( plantComputeShader.GetUniform( TIME ), Plant::timeVal );
 
+	for ( UINT i = 0; i < Plant::plantArray.size( ); i++ )
+		Plant::plantArray[i].UpdateWithCompute( );
 
-	plantShader.Use( );
-	glUniformMatrix4fv( plantShader.GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
-
-	for ( UINT i = 0; i < numPlants; i++ )
-		plants[i].Draw( );
-
-	matrixStack.PopMatrix( );
+#endif
 
 
-	text.DrawText();
+	// Plant Draws
+	{
+		plantShader.Use( );
+		glUniformMatrix4fv( plantShader.GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
+
+
+
+
+		for ( UINT i = 0; i < Plant::plantArray.size( ); i++ )
+		{
+#ifndef USE_COMPUTE
+			Plant::plantArray[i].Update( );
+#endif
+			Plant::plantArray[i].UpdateObject( );
+
+		}
+		for ( UINT i = 0; i < Plant::plantArray.size( ); i++ )
+		{
+			Plant::plantArray[i].Draw( );
+		}
+	}
+
+
+	text.DrawText( );
 
 	BOOL result = SwapBuffers( WinApp::deviceContext );
+	glFinish( );
 	wglMakeCurrent( NULL, NULL );
 }
 

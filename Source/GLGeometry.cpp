@@ -12,8 +12,7 @@ GLShape GLGeometry::MakeCube( CUBE_DESC& description )
 #define CUBE_INDEX_NUM 36
 	GLShape cube;
 
-	cube.size = CUBE_INDEX_NUM;
-	cube.indexed = true;
+	cube.indexCount = CUBE_INDEX_NUM;
 	cube.primitiveType = GL_TRIANGLES;
 
 	Vector3 positions[CUBE_VERTEX_NUM] =

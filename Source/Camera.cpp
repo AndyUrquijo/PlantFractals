@@ -15,43 +15,32 @@ Camera::Camera( )
 void Camera::MoveCamera( )
 {
 #define CAMERA_TOP_SPEED 150.0f
-#define CAMERA_ACCELERATION 40.0f
-#define CAMERA_FRICTION 30.0f
-#define CAMERA_TOP_ANGULAR_SPEED 0.002f
-#define CAMERA_TOP_ANGULAR_SPEEDX 0.001f
-#define CAMERA_ANGULAR_ACCELERATION 0.4f
-#define CAMERA_FRICTION_TORQUE 0.2f
+#define CAMERA_ACCELERATION 400.0f
+#define CAMERA_FRICTION 300.0f
+#define CAMERA_TOP_ANGULAR_SPEED 20.0f
+#define CAMERA_TOP_ANGULAR_SPEEDX 15.0f
+#define CAMERA_TOP_ANGULAR_SPEED_MOUSE 5.0f
+#define CAMERA_ANGULAR_ACCELERATION 4.0f
+#define CAMERA_FRICTION_TORQUE 3.0f
 
 	static Clock clock;
-	float dt = (float)clock.Tick( );
+	float dt = (float) clock.Tick( );
+
+	// Translation
 
 	Vector3 dV( 0, 0, 0 );
 
-	if ( GetAsyncKeyState( 'W' ) )
-		dV.z++;
-	if ( GetAsyncKeyState( 'S' ) )
-		dV.z--;
+	if ( GetAsyncKeyState( 'W' ) )		dV.z--;
+	if ( GetAsyncKeyState( 'S' ) )		dV.z++;
 
-	if ( GetAsyncKeyState( 'A' ) )
-		dV.x++;
-	if ( GetAsyncKeyState( 'D' ) )
-		dV.x--;
+	if ( GetAsyncKeyState( 'A' ) )		dV.x++;
+	if ( GetAsyncKeyState( 'D' ) )		dV.x--;
 
-	if ( GetAsyncKeyState( 'Q' ) )
-		dV.y++;
-	if ( GetAsyncKeyState( 'E' ) )
-		dV.y--;
+	if ( GetAsyncKeyState( 'Q' ) )		dV.y++;
+	if ( GetAsyncKeyState( 'E' ) )		dV.y--;
 
-	if ( dV.LengthSq( ) > 0 )
-	{
-		dV = Vector3( ( Matrix44::MakeYRotation( orientation.y )*Matrix44::MakeXRotation( orientation.x ) )*Vector4( dV, 1 ) );
-		float dv = CAMERA_ACCELERATION*dt;
-		dV *= sqrtf( dv*dv / dV.LengthSq( ) );
-		velocity += dV;
-	}
-	//velocity.x = Clamp( velocity.x, -CAMERA_TOP_SPEED, CAMERA_TOP_SPEED );
-	//velocity.y = Clamp( velocity.y, -CAMERA_TOP_SPEED, CAMERA_TOP_SPEED );
-	//velocity.z = Clamp( velocity.z, -CAMERA_TOP_SPEED, CAMERA_TOP_SPEED );
+	if ( !dV.IsZero( ) )
+		velocity += dV.Normalize( )*CAMERA_ACCELERATION*dt;
 
 	velocity *= min( 1.0f, sqrtf( CAMERA_TOP_SPEED*CAMERA_TOP_SPEED / velocity.LengthSq( ) ) );
 
@@ -61,20 +50,39 @@ void Camera::MoveCamera( )
 		if ( v <= fr )
 			velocity = { 0, 0, 0 };
 		else
-			velocity -= velocity*(fr/v);
+			velocity -= velocity*( fr / v );
 	}
 
-	position += velocity*dt;
+	Vector3 worldV = Vector3( Vector4( velocity, 0 )*Matrix44::MakeYRotation( orientation.y )*Matrix44::MakeXRotation( orientation.x ) );
+	position += worldV*dt;
 
-	float dW = CAMERA_ANGULAR_ACCELERATION*dt;
-	if ( GetAsyncKeyState( VK_LEFT ) )
-		angularVelocity.y += dW;
-	if ( GetAsyncKeyState( VK_RIGHT ) )
-		angularVelocity.y -= dW;
-	if ( GetAsyncKeyState( VK_UP ) )
-		angularVelocity.x += dW;
-	if ( GetAsyncKeyState( VK_DOWN ) )
-		angularVelocity.x -= dW;
+
+
+	// Rotation
+
+	Vector3 dW( 0, 0, 0 );
+	POINT curr; // current mouse location
+	GetPhysicalCursorPos( &curr ); // determine new location
+	static POINT prev = curr; // previous mouse location
+	if ( GetAsyncKeyState( VK_RBUTTON ) )
+	{
+		dW.y = float( curr.x - prev.x ) / 50.0f;
+		dW.x = float( curr.y - prev.y ) / 50.0f;
+
+		if ( !dW.IsZero( ) )
+			angularVelocity = dW*CAMERA_TOP_ANGULAR_SPEED_MOUSE;
+	}
+	else
+	{
+		if ( GetAsyncKeyState( VK_LEFT ) ) 		dW.y--;
+		if ( GetAsyncKeyState( VK_RIGHT ) )		dW.y++;
+		if ( GetAsyncKeyState( VK_UP ) )		dW.x--;
+		if ( GetAsyncKeyState( VK_DOWN ) )		dW.x++;
+
+		if ( !dW.IsZero( ) )
+			angularVelocity += dW.Normalize( )*CAMERA_ANGULAR_ACCELERATION*dt;
+	}
+	prev = curr;
 
 	angularVelocity.x = Clamp( angularVelocity.x, -CAMERA_TOP_ANGULAR_SPEEDX, CAMERA_TOP_ANGULAR_SPEEDX );
 	angularVelocity.y = Clamp( angularVelocity.y, -CAMERA_TOP_ANGULAR_SPEED, CAMERA_TOP_ANGULAR_SPEED );
@@ -88,14 +96,21 @@ void Camera::MoveCamera( )
 		else angularVelocity.elm[i] = 0;
 	}
 
-	orientation += angularVelocity;
+	orientation += angularVelocity*dt;
 }
 
-Math::Matrix44 Camera::MakeViewMatrix( ) const
+Matrix44 Camera::MakeViewMatrix( ) const
 {
-	Matrix44 transform = Matrix44::MakeTranslation( position*( -1 ) );
-	transform = Matrix44::MakeZRotation( orientation.z*( -1 ) )*transform;
-	transform = Matrix44::MakeYRotation( orientation.y*( -1 ) )*transform;
-	transform = Matrix44::MakeXRotation( orientation.x*( -1 ) )*transform;
+	Matrix44 transform = Matrix44::MakeIdentity( );
+	transform *= Matrix44::MakeTranslation( position*( 1 ) );
+	transform *= Matrix44::MakeZRotation( orientation.z*( 1 ) );
+	transform *= Matrix44::MakeYRotation( orientation.y*( 1 ) );
+	transform *= Matrix44::MakeXRotation( orientation.x*( 1 ) );
+	//transform = transform.Transpose();
 	return transform;
+}
+
+Vector3 Camera::GetForward( ) const
+{
+	return Vector3( Vector4( position, 0 )*Matrix44::MakeYRotation( orientation.y )*Matrix44::MakeXRotation( orientation.x ) );
 }

@@ -10,12 +10,6 @@
 
 namespace Math
 {
-	static const float PI = 3.14159265359f;
-
-	float UnitRand( );
-	float RangeRand( float min, float max );
-	float Clamp( float value, float min, float max );
-
 	struct Vector2;
 	struct Vector3;
 	struct Vector4;
@@ -23,6 +17,14 @@ namespace Math
 	struct Rectangle;
 
 	struct Short2;
+
+	static const float PI = 3.14159265359f;
+
+	float UnitRand( );
+	float RangeRand( float min, float max );
+	float Clamp( float value, float min, float max );
+
+
 	//-----------------
 	// Vector2
 	//-----------------
@@ -133,7 +135,8 @@ namespace Math
 		Vector3 ElementMultiply( const Vector3& vector ) const	{ return Vector3( x*vector.x, y*vector.y, z*vector.z ); }
 		Vector3 ElementMultiply( float x, float y, float z ) const			{ return Vector3( this->x*x, this->y*y, this->z*z ); }
 
-		bool IsZero( float eps = 0.0f ) const		{ return fabsf( x ) <= eps && fabsf( x ) <= eps && fabsf( z ) <= eps; }
+		bool IsZero( ) const				{ return  x == 0.0f && y == 0.0f && z == 0.0f; }
+		bool IsZero( float eps ) const		{ return fabsf( x ) <= eps && fabsf( x ) <= eps && fabsf( z ) <= eps; }
 
 		Vector3 Cross( const Vector3& vector ) const;
 
@@ -148,6 +151,8 @@ namespace Math
 									   float minTheta, float maxTheta,
 									   float minPhi, float maxPhi );
 
+		static Vector3 Randomize( const Vector3& min, const Vector3& max );
+		static Vector3 Randomize( const Vector2& xRange, const Vector2& yRange, const Vector2& zRange );
 	};
 
 	Vector3 operator*( float scalar, const Vector3& vector );
@@ -256,11 +261,11 @@ namespace Math
 		Matrix44 operator-( const Matrix44& matrix ) const;
 		Matrix44 operator*( const Matrix44& matrix ) const;
 		Vector4 operator*( const Vector4& vector ) const;
+		Matrix44 operator*( float scalar ) const;
 
 		Matrix44& operator*=( const Matrix44& matrix );
 
 		Matrix44 Transpose( ) const;
-		//Wrapper for Richard Wright's code, replace with own
 		Matrix44 Inverse( ) const;
 
 		static Matrix44 MakeIdentity( );
@@ -269,8 +274,7 @@ namespace Math
 		static Matrix44 MakeXRotation( float angle );
 		static Matrix44 MakeYRotation( float angle );
 		static Matrix44 MakeZRotation( float angle );
-		//Wrapper for Richard Wright's code, replace with own
-		static Matrix44 MakePerspectiveMatrix( float fov, float aspect, float zMin, float zMax );
+		static Matrix44 MakeProjectionMatrix( float fov, float aspect, float zMin, float zMax );
 	};
 
 

@@ -29,7 +29,7 @@ public:
 	void Translate(GLSpace space, float x, float y, float z);
 	void Scale(GLSpace space, float scale);
 	void Scale(GLSpace space, float x, float y, float z);
-	void Rotate(GLSpace space, float angle, float axisX, float axisY, float axisZ);
+	//void Rotate(GLSpace space, float angle, float axisX, float axisY, float axisZ);
 	void Orbit(GLSpace space, float angle, float axisX, float axisY, float axisZ);
 
 	/*

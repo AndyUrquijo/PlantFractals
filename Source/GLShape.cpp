@@ -3,8 +3,11 @@
 void GLShape::Draw( )
 {
 	glBindVertexArray( vertexArray );
-	if ( indexed )
-		glDrawElements( primitiveType, size, GL_UNSIGNED_SHORT, 0 );
-	else
-		glDrawArrays( primitiveType, 0, size );
+	glDrawElements( primitiveType, indexCount, GL_UNSIGNED_SHORT, 0 );
+}
+
+void GLSimpleShape::Draw( )
+{
+	glBindVertexArray( vertexArray );
+	glDrawArrays( primitiveType, 0, vertexCount );
 }
