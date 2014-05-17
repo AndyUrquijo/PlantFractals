@@ -4,14 +4,22 @@
 
 uniform float TIME;
 
+struct PlantVertex
+{
+	vec3 position;
+	float level;
+	vec3 normal;
+	float delay;
+};
+
 layout(std140, binding = 0) buffer staticDataBuffer
 {
-      vec4 positions[];
+      PlantVertex vertices[];
 } staticData;
 
 layout(std140, binding = 1) buffer dynamicDataBuffer
 {
-      vec4 positions[];
+      PlantVertex vertices[];
 } dynamicData;
 
 
@@ -31,21 +39,35 @@ void main()
 {
 	uint id = gl_GlobalInvocationID.x;
 	
-	vec3 Ro = staticData.positions[id].xyz;
+	float level = staticData.vertices[id].level;
+	float delay = staticData.vertices[id].delay;
+	
+	vec3 Ro = staticData.vertices[id].position;
+	vec3 No = staticData.vertices[id].normal;
 	vec3 R;
+	vec3 N;
 
 	float r = length(Ro);
 
-	float w = length(cross(Ro,wind));
-	vec3 Wo = Ro + wind*sqrt(w) ; // equilibrium position with wind
+	float Wf = length(cross(Ro,wind));
+	vec3 Wo = Ro + wind*sqrt(Wf) ; // equilibrium position with wind
 	Wo = normalize(Wo)*r;
 
 	float Ao = acos( dot( Ro, Wo ) / ( r*r ) ); //angle between Wo and Ro
 
 	vec3 n = normalize( cross( Ro, Wo ) );	//unit vector normal to Rp and Wo
-	float a = 10.0 / r;		//oscilation frequency
+	float w = 10.0 / r;		//oscilation frequency
 
-	R = rotate(Wo, 0.3*Ao*sin( a*TIME ), n );
 
-	dynamicData.positions[id] = vec4(R,0);
+	float a = 0.3*Ao*sin( w*TIME );
+	R = rotate(Wo, a, n );
+
+	vec3 pr = normalize( cross(R, Ro) );
+	float ar = acos( dot(Ro,R) / ( r*r ) );
+	N = rotate(No, a, pr);
+
+	dynamicData.vertices[id].position = R;
+	dynamicData.vertices[id].normal= N;
+	dynamicData.vertices[id].level = level;
+	dynamicData.vertices[id].delay = delay;
 }

@@ -4,14 +4,17 @@ uniform mat4 WORLD;
 uniform mat4 VP;
 
 attribute vec4 _position;
+attribute vec4 _normal; 
 
-// for the start vertex, this is the parents direction.
-// for the end vertex, this is the normal direction.
-//attribute vec4 _direction; 
-//varying vec4 var_direction;
+out float vo_level;
+out float vo_delay;
+out vec3 vo_normal;
 
 void main()
 {
-	gl_Position = WORLD*_position;
-	//var_direction = WORLD*_direction;
+	vo_level = _position.w;
+	vo_delay = _normal.w;
+
+	gl_Position = WORLD*vec4(_position.xyz, 1);
+	vo_normal = vec3(WORLD*vec4(_normal.xyz, 0));
 }

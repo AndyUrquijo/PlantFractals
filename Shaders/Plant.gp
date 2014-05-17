@@ -7,10 +7,27 @@ uniform mat4 VP;
 layout(lines) in;
 layout (triangle_strip, max_vertices=8) out;
 
-vec4 corners[6];
-vec3 u, v;
 
-//varying vec3 var_color;
+in float vo_level[];
+in float vo_delay[];
+in vec3 vo_normal[];
+out vec3 go_normal;
+out vec3 go_color;
+
+vec4 corners[6];
+
+
+const vec3 colorA = vec3(0.20, 0.15, 0.00); // start
+const vec3 colorB = vec3(0.10, 0.70, 0.00); // end
+
+#define PI 3.1415926535897932384626433832795
+
+vec3 Rotate( vec3 v, float a, vec3 n )
+{
+	return v*cos(a) + ( cross(v,n) )*sin(a) + n*dot(v,n)*(1 - cos(a));		// Rodrigues rotation formula
+}
+
+
 
 void EmitCorner( int i )
 {
@@ -25,55 +42,78 @@ bool IsOutOfView( vec2 v )
 
 void main()
 {
-	vec3 r = (gl_in[1].gl_Position - gl_in[0].gl_Position).xyz;
 
-	float divW = gl_in[0].gl_Position.w;
+vec3 dN[3];
+vec4 dNp[3];
 
-	float wdt = length( r )*0.08;
 
-	vec3 d = normalize(r);
-	if( dot(d, vec3(0,1,0) ) > 0.99 )
-	{
-		u = vec3(1,0,0)*wdt;
-		v = vec3(0,0,1)*wdt;
-	}
-	else
-	{
-		u = vec3(0,1,0)*wdt;
-		v = vec3( cross(u,d) );
-	}
+	vec4 Rs = gl_in[0].gl_Position; //start position
+	vec4 Re = gl_in[1].gl_Position; //end position
+	
+	vec3 Ns = vo_normal[0]; //start normal
+	vec3 Ne = vo_normal[1]; //end normal
 
-	// bottom verts
+	vec3 r = (Re - Rs).xyz;
 
-	vec4 start = VP*gl_in[0].gl_Position;
-	vec4 end = VP*gl_in[1].gl_Position;
+
+	float wdt = length( r )*0.06;
+	vec3 ru = normalize(r);
+	vec3 n = normalize(Ne);
+	
+	dN[0] = n;
+	dN[1] = Rotate(n, PI*2/3, ru);
+	dN[2] = Rotate(n, -PI*2/3, ru);
+
+	Rs = VP*Rs;
+	Re = VP*Re;
 
 	// Omits very small branches (in screen size)
-	if( length( start.xy - end.xy )/start.w < 0.01 )
+	if( length( Rs.xy - Re.xy )/Rs.w < 0.01 )
 		return;
 	
-	if( IsOutOfView( start.xy/start.w ) && IsOutOfView( end.xy/end.w ) )
+	if( IsOutOfView( Rs.xy/Rs.w ) && IsOutOfView( Re.xy/Re.w ) )
 		return;
 
-	u = mat3(VP)*u;
-	v = mat3(VP)*v;
-	corners[0] = start;
-	corners[1] = start + vec4(u,0);
-	corners[2] = start + vec4(v,0);
-										   
-	// top verts						   
-	corners[3] = end;
-	corners[4] = end + vec4(u,0)*0.9;
-	corners[5] = end + vec4(v,0)*0.9;
+	dNp[0] = vec4( mat3(VP)*dN[0]*wdt , 0 );
+	dNp[1] = vec4( mat3(VP)*dN[1]*wdt , 0 );
+	dNp[2] = vec4( mat3(VP)*dN[2]*wdt , 0 );
+
+	corners[0] = Rs + dNp[0];
+	corners[1] = Rs + dNp[1];
+	corners[2] = Rs + dNp[2];
+
+	// top verts
+	corners[3] = Re + dNp[0];
+	corners[4] = Re + dNp[1];
+	corners[5] = Re + dNp[2];
+	
 
 
+	vec3 colorStart = mix( colorA, colorB, vo_level[0] /7);
+	vec3 colorEnd = mix( colorA, colorB, vo_level[1] /7);
+
+	go_normal = dN[0];
+	go_color = colorStart;
 	EmitCorner(0);
+	go_color  = colorEnd;
 	EmitCorner(3);
+
+	go_normal = dN[1];
+	go_color  = colorStart;
 	EmitCorner(1);
+	go_color  = colorEnd;
 	EmitCorner(4);
+	
+	go_normal = dN[2];
+	go_color  = colorStart;
 	EmitCorner(2);
+	go_color  = colorEnd;
 	EmitCorner(5);
+
+	go_normal = dN[0];
+	go_color  = colorStart;
 	EmitCorner(0);
+	go_color  = colorEnd;
 	EmitCorner(3);
 }
 

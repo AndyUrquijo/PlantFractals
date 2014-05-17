@@ -14,45 +14,70 @@
 
 using Math::Vector3;
 
+#define CHILD_AMOUNT 5
+#define LAST_LEVEL 5
+#define BASE_LENGTH 10.0f
+#define APERTURE 0.18*PI
 float			Plant::timeVal;
 vector<Plant>	Plant::plantArray;
 
 //GLuint		Plant::staticPositionsBuffer;
-GLuint			Plant::dynamicPositionsBuffer;
+GLuint			Plant::dynamicDataBuffer;
 
 
-Vector3 Transorm( const Vector3& Ro, uint index )
+Plant::PlantVertex Plant::Transform( const PlantVertex& vertex, uint index )
 {
-#define PHI 0.03f*PI
-#define THETA 0.66f*PI
+
+	Vector3 Ro = vertex.position;
+	Vector3 No = vertex.normal;
 
 	Vector3 R;
-	if ( index == 3 )
+	Vector3 N;
+
+	if ( index == CHILD_AMOUNT - 1)
 	{
-		R = Ro*0.9f;
+		R = Ro*RangeRand(0.7,1.0);
+		N = No;
 	}
 	else
 	{
-		float phi = PHI;
-		float theta = index*THETA;
+		float phi = RangeRand(0.8,1.2)*APERTURE;
+		float theta = ( RangeRand(-0.5,0.5) + index)*(2*PI/(CHILD_AMOUNT-1));
 
-		R = Vector3::RandomRotation( Ro, theta, theta, phi, phi );
-		R = R.Normalize( )*Ro.Length( )*0.6f;
+		Vector3 S = No.Rotate( theta, Ro.Normalize( ) ).Normalize( );
+		R = Ro.Rotate( phi, S ).Normalize( )*Ro.Length( )*RangeRand(0.5f, 0.7f);
+		N = No.Rotate( phi, S ).Normalize( );
 	}
-	return R;
+
+	float level = vertex.level + 1;
+	float delay = UnitRand()*2*PI;
+
+	return { R, level, N, delay };
 }
 
 // ----------------
 // --- Creation ---
 // ----------------
 
+void Plant::InitializeSystem( )
+{
+	plantArray.resize( 5 );
+
+	for ( UINT i = 0; i < plantArray.size( ); i++ )
+	{
+		Plant::plantArray[i].location = Vector3::Randomize( { -50, 50 }, { 0, 0 }, { -50, 50 } );
+		Plant::plantArray[i].Create( );
+	}
+
+	uint numComponents = Plant::plantArray[0].GetComponentCount( );
+	//Plant::staticPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) *numComponents );
+	dynamicDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * numComponents );
+}
+
+
+
 void Plant::Create( )
 {
-#define CHILD_AMOUNT 4
-#define LAST_LEVEL 7
-#define BASE_LENGTH 10.0f
-
-
 	// --- Initialize tree structure ---
 
 	Component comp;
@@ -96,17 +121,18 @@ void Plant::Create( )
 
 	// --- Initialize tree data ---
 
-	staticPositions.resize( components.size( ) );
+	staticData.resize( components.size( ) );
 
 
-	staticPositions[0] = Vector4( location, 1 );
-	staticPositions[1] = { 0, BASE_LENGTH, 0, 1 };
+	staticData[0] = { location, 0, { 1, 0, 0 }, 0 };
+	staticData[1] = { { 0, BASE_LENGTH, 0 }, 1, { 1, 0, 0 }, 0 };
+
 	for ( uint i = 2; i < components.size( ); i++ )
 	{
 		uint parent = components[i].parentIndex;
 		uint childnumber = i - components[parent].firstChildIndex;
-		staticPositions[i] = Vector4( Transorm( Vector3( staticPositions[parent] ), childnumber ), 0 );
-		components[i].delay = RangeRand( 0, 2 * Math::PI );
+		staticData[i] = Transform( staticData[parent], childnumber );
+
 	}
 
 	// --- Initialize buffer data ---
@@ -129,7 +155,21 @@ void Plant::Create( )
 	glGenVertexArrays( 1, &shape.vertexArray );
 	glBindVertexArray( shape.vertexArray );
 
-	shape.vertexBuffer = GLFactory::CreateVertexBuffer( VERTEX_POSITION, 4, GL_FLOAT, NULL, sizeof(Vector4) * numComp );
+	//shape.vertexBuffer = GLFactory::CreateVertexBuffer( VERTEX_POSITION, 4, GL_FLOAT, NULL, sizeof(Vector4) * numComp );
+
+	// Buffer initialization. TODO: transfer to a factory method
+	GLuint handle;
+	glGenBuffers( 1, &handle );
+	glBindBuffer( GL_ARRAY_BUFFER, handle );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(PlantVertex) * numComp, NULL, GL_DYNAMIC_DRAW );
+
+	glEnableVertexAttribArray( VERTEX_POSITION );
+	glEnableVertexAttribArray( VERTEX_NORMAL );
+	glVertexAttribPointer( VERTEX_POSITION, 4, GL_FLOAT, GL_FALSE, 32, 0 );
+	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 4 );
+	shape.vertexBuffer = handle;
+
+
 	shape.indexBuffer = GLFactory::CreateIndexBuffer( indices, sizeof(ushort) *numComp * 2 );
 
 	delete[] indices;
@@ -139,23 +179,23 @@ void Plant::Create( )
 
 
 	// Initialize GPU buffer with static positions
-	staticPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) *GetComponentCount( ) );
+	staticDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) *GetComponentCount( ) );
 
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticPositionsBuffer );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
 
-	Vector4* positions = (Vector4*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
-	if ( !positions ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
+	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
+	
+	if ( !vertices ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
 
 
 	for ( uint iComp = 0; iComp < components.size( ); iComp++ )
-		positions[iComp] = staticPositions[iComp];
+		vertices[iComp] = staticData[iComp];
 
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
 
-	dynamicPositions.resize( components.size( ) );
+	dynamicData.resize( components.size( ) );
 
 }
-
 
 // --------------
 // --- Update ---
@@ -169,12 +209,16 @@ void Plant::UpdateObject( )
 	glBindVertexArray( shape.vertexArray );
 	glBindBuffer( GL_ARRAY_BUFFER, shape.vertexBuffer );
 
-	Vector4* positions = (Vector4*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
-	positions[0] = { 0, 0, 0, 1 };
+	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
+
+	vertices[0] = { { 0, 0, 0 }, 1, { 1, 0, 0 }, 0 };
 	for ( uint iComp = 1; iComp < shape.indexCount / 2; iComp++ )
 	{
-		uint iParent = components[iComp].parentIndex;;
-		positions[iComp] = dynamicPositions[iComp] + positions[iParent];
+		uint iParent = components[iComp].parentIndex;
+		vertices[iComp].position = dynamicData[iComp].position + vertices[iParent].position;
+		vertices[iComp].level = dynamicData[iComp].level;
+		vertices[iComp].normal = dynamicData[iComp].normal;
+		vertices[iComp].delay = dynamicData[iComp].delay;
 	}
 	glUnmapBuffer( GL_ARRAY_BUFFER );
 }
@@ -183,7 +227,7 @@ void Plant::UpdateObject( )
 
 void Plant::Update( )
 {
-	dynamicPositions[0] = staticPositions[0];
+	dynamicData[0] = staticData[0];
 
 	float t = Plant::timeVal;
 	Vector3 wind = { -1, 0, 0 };
@@ -191,25 +235,38 @@ void Plant::Update( )
 
 	for ( uint i = 1; i < components.size( ); i++ )
 	{
-		Vector3 R = (Vector3) dynamicPositions[i];
-		Vector3 Ro = (Vector3) staticPositions[i];
+		const Vector3 Ro = (Vector3) staticData[i].position;
+		const Vector3 No = (Vector3) staticData[i].normal;
+
+		Vector3 R;
+		Vector3 N;
+
 
 		//float d = components[i].delay;
 
 		float r = Ro.Length( );
 
-		float Wf = Ro.Cross( wind ).Length( );
-		Vector3 Wo = Ro + sqrt( Wf ) *wind; // equilibrium position with wind
+		float Wf = Ro.Cross( wind ).Length();
+		Vector3 Wo = Ro +  pow(Wf,0.5)*wind; // equilibrium position with wind
 		Wo = Wo.Normalize( )*r;
 
 		float Ao = acos( ( Ro*Wo ) / ( r*r ) ); //angle between Wo and Ro
 
 		Vector3 n = Ro.Cross( Wo ).Normalize( );	//unit vector normal to Rp and Wo
-		float w = 10.0f / r;		//oscilation frequency
+		float w = 10.0f / pow(r,1.0);		//oscilation frequency
 
-		R = Wo.Rotate( 0.3f*Ao*sin( w*t ), n );
+		float a = 0.3f*Ao*sin( w*t );
 
-		dynamicPositions[i] = Vector4( R, 0 );
+		R = Wo.Rotate( a, n );
+
+		Vector3 pr = Ro.Cross( R ).Normalize( );
+		float ar = acos( ( Ro*R ) / ( r*r ) );
+
+		N = No.Rotate( ar, pr );
+
+		float level = staticData[i].level;
+		float delay = staticData[i].delay;
+		dynamicData[i] = { R, level , N, delay };
 	}
 
 }
@@ -217,8 +274,8 @@ void Plant::Update( )
 void Plant::UpdateWithCompute( )
 {
 
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticPositionsBuffer );
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicPositionsBuffer );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
 
 	uint numComponents = plantArray[0].GetComponentCount( );
 
@@ -235,12 +292,12 @@ void Plant::UpdateWithCompute( )
 
 void Plant::ReadDynamicData( )
 {
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicPositionsBuffer );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
 
-	Vector4* positions = (Vector4*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
-	if ( !positions ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
+	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
+	if ( !vertices ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
 
-	memcpy_s( &dynamicPositions[0], sizeof(Vector4) *dynamicPositions.size( ), positions, sizeof(Vector4) *dynamicPositions.size( ) );
+	memcpy_s( &dynamicData[0], sizeof(PlantVertex) *dynamicData.size( ), vertices, sizeof(PlantVertex) *dynamicData.size( ) );
 
 	//for ( uint iComp = 0; iComp < components.size( ); iComp++ )
 	//	dynamicPositions[iComp] = positions[iComp];

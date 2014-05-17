@@ -31,6 +31,7 @@ void GLRenderer::Initialize( void )
 	plantShader.LoadShader( "Shaders/Plant.gp", GL_GEOMETRY_SHADER );
 	plantShader.LoadShader( "Shaders/Plant.fp", GL_FRAGMENT_SHADER );
 	plantShader.BindAttribute( VERTEX_POSITION, "_position" );
+	plantShader.BindAttribute( VERTEX_NORMAL, "_normal" );
 	plantShader.CompileProgram( );
 	plantShader.ObtainUniform( WORLD, "WORLD" );
 	plantShader.ObtainUniform( VP, "VP" );
@@ -59,25 +60,13 @@ void GLRenderer::Initialize( void )
 
 void GLRenderer::InitializeObjects( void )
 {
-	Plant::plantArray.resize( 10 );
-
-	for ( UINT i = 0; i < Plant::plantArray.size( ); i++ )
-	{
-		Plant::plantArray[i].location = Vector3::Randomize( { -50, 50 }, { 0, 0 }, { -50, 50 } );
-		Plant::plantArray[i].Create( );
-	}
-
-	uint numComponents = Plant::plantArray[0].GetComponentCount( );
-	//Plant::staticPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) *numComponents );
-	Plant::dynamicPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) * numComponents );
-
+	Plant::InitializeSystem( );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Do your cleanup here. Free textures, display lists, buffer objects, etc.
 void GLRenderer::Terminate( void )
 {
-
 }
 
 
@@ -143,10 +132,7 @@ void GLRenderer::Render( void )
 	camera.MoveCamera( );
 
 	Math::Matrix44 viewProjection = camera.MakeViewMatrix( )*projMatrix;
-	glClear( GL_COLOR_BUFFER_BIT );
-	glClear( GL_DEPTH_BUFFER_BIT );
-
-
+	
 
 	static Clock plantClock;
 	Plant::timeVal = plantClock.Watch( );
@@ -165,6 +151,11 @@ void GLRenderer::Render( void )
 
 	// Plant Draws
 	{
+		glEnable( GL_DEPTH_TEST );
+		glClear( GL_COLOR_BUFFER_BIT );
+		glClear( GL_DEPTH_BUFFER_BIT );
+
+
 		plantShader.Use( );
 		glUniformMatrix4fv( plantShader.GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
 
@@ -186,6 +177,7 @@ void GLRenderer::Render( void )
 	}
 
 
+	glDisable( GL_DEPTH_TEST);
 	text.DrawText( );
 
 	BOOL result = SwapBuffers( WinApp::deviceContext );

@@ -160,7 +160,7 @@ namespace Math
 		float cos_a = cos( angle ), sin_a = sin( angle );
 		const Vector3& v = *this, w = unitAxis;
 
-		// Rodriges rotation formula
+		// Rodrigues rotation formula
 		return v*cos_a + ( v.Cross( w ) )*sin_a + w*( v*w )*( 1 - cos_a );
 	}
 
