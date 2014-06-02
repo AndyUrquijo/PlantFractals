@@ -51,7 +51,7 @@ void main()
 
 	float Wf = length(cross(Ro,wind));
 	vec3 Wo = Ro + wind*sqrt(Wf) ; // equilibrium position with wind
-	Wo = normalize(Wo)*r;
+	//Wo = normalize(Wo)*r;
 
 	float Ao = acos( dot( Ro, Wo ) / ( r*r ) ); //angle between Wo and Ro
 
@@ -59,8 +59,9 @@ void main()
 	float w = 10.0 / r;		//oscilation frequency
 
 
-	float a = 0.3*Ao*sin( w*TIME );
+	float a = 0.3*Ao*sin( delay + w*TIME );
 	R = rotate(Wo, a, n );
+	R = normalize(R)*r;
 
 	vec3 pr = normalize( cross(R, Ro) );
 	float ar = acos( dot(Ro,R) / ( r*r ) );

@@ -1,12 +1,18 @@
 //Plant.vp
 #version 110
 
+//#define LINE_TEST
+
 uniform mat4 WORLD;
 uniform mat4 VP;
 
 layout(lines) in;
-layout (triangle_strip, max_vertices=8) out;
 
+#ifdef LINE_TEST
+layout (line_strip, max_vertices=8) out;
+#else
+layout (triangle_strip, max_vertices=8) out;
+#endif
 
 in float vo_level[];
 in float vo_delay[];
@@ -55,8 +61,9 @@ vec4 dNp[3];
 
 	vec3 r = (Re - Rs).xyz;
 
-
 	float wdt = length( r )*0.06;
+	//float wdt = pow(length( r ),1.5)*0.015;
+	
 	vec3 ru = normalize(r);
 	vec3 n = normalize(Ne);
 	
@@ -73,6 +80,7 @@ vec4 dNp[3];
 	
 	if( IsOutOfView( Rs.xy/Rs.w ) && IsOutOfView( Re.xy/Re.w ) )
 		return;
+
 
 	dNp[0] = vec4( mat3(VP)*dN[0]*wdt , 0 );
 	dNp[1] = vec4( mat3(VP)*dN[1]*wdt , 0 );
@@ -91,6 +99,18 @@ vec4 dNp[3];
 
 	vec3 colorStart = mix( colorA, colorB, vo_level[0] /7);
 	vec3 colorEnd = mix( colorA, colorB, vo_level[1] /7);
+
+
+#ifdef LINE_TEST
+	go_color = colorStart;
+	gl_Position = Rs;
+	EmitVertex();
+	go_color = colorEnd;
+	gl_Position = Re;
+	EmitVertex();
+	return;
+#endif
+
 
 	go_normal = dN[0];
 	go_color = colorStart;

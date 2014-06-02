@@ -66,8 +66,8 @@ void Camera::MoveCamera( )
 	static POINT prev = curr; // previous mouse location
 	if ( GetAsyncKeyState( VK_RBUTTON ) )
 	{
-		dW.y = -float( curr.x - prev.x ) / 50.0f;
-		dW.x = float( curr.y - prev.y ) / 50.0f;
+		dW.y =  float( curr.x - prev.x ) / 50.0f;
+		dW.x = -float( curr.y - prev.y ) / 50.0f;
 
 		if ( !dW.IsZero( ) )
 			angularVelocity = dW*CAMERA_TOP_ANGULAR_SPEED_MOUSE;

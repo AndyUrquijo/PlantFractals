@@ -18,12 +18,12 @@ class Plant
 	GLObject object;
 
 	std::vector<Component> components;		// Tree components containing its hiearchycal info
-
+	uint leavesIndex;
 
 	struct PlantVertex
 	{
 		Vector3 position;	// contains the position in world space.
-		float	level;
+		float	level;		// the level in the tree (0 for the root) // the position in the branch (for leaves)
 		Vector3 normal;		// a unit vector perpendicular to the branch's direction.
 		float	delay;
 	};
@@ -36,12 +36,13 @@ class Plant
 
 	GLuint	staticDataBuffer;
 	static GLuint	dynamicDataBuffer;
+	static GLuint	dynamicDataBufferSize;
 
 	Math::Vector3 location;
 
 	int GetComponentCount( ) { return (int) components.size( ); }
 
-	static void InitializeSystem();
+	static void InitializeSystem( );
 
 	//Creates the tree structure of Components and the buffer that will be used on the GPU
 	void Create( );
@@ -57,6 +58,7 @@ class Plant
 	static std::vector<Plant> plantArray;
 	void UpdateWithCompute( );
 
-	PlantVertex Transform( const PlantVertex& vertex, uint index );
+	enum TransformType { KEEP_DIRECTION, EVEN_DISTRIBUTION, RANDOM_DISTRIBUTION };
+	PlantVertex Transform( const PlantVertex& vertex, uint index, uint count, TransformType type );
 };
 

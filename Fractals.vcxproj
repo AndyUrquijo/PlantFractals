@@ -123,7 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="Shaders\Plant.cp">
+    <None Include="Shaders\PlantUpdate.cp">
       <FileType>CppCode</FileType>
     </None>
     <ClCompile Include="Source\Camera.cpp" />

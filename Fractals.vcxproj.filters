@@ -142,7 +142,7 @@
     <None Include="Shaders\Text.fp">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\Plant.cp">
+    <None Include="Shaders\PlantUpdate.cp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
