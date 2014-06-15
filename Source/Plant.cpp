@@ -10,6 +10,8 @@
 
 #include <Windows.h>
 
+#include "Clock.h"
+
 #include "WinApp.h"
 
 using Math::Vector3;
@@ -22,21 +24,17 @@ using Math::Vector3;
 
 /// Random ranges
 #define CHILD_AMOUNT		1,		5
-#define STRAIGHT_RATIO		0.8,	0.8
-#define TWIST_RATIO			0.8,	0.8
+#define STRAIGHT_RATIO		0.8,	1.0
+#define TWIST_RATIO			0.5,	0.7
 #define DISTRIB_RATIO		0.0,	1.0
 #define APERTURE_RATIO		0.8,	1.2
 
-float			Plant::timeVal;
-vector<Plant>	Plant::plantArray;
 
-//GLuint		Plant::staticPositionsBuffer;
-GLuint			Plant::dynamicDataBuffer;
-GLuint			Plant::dynamicDataBufferSize;
+PlantSystem* Plant::system;
 
 
 
-Plant::PlantVertex Plant::Transform( const PlantVertex& vertex, uint index, uint count, TransformType type )
+PlantVertex Plant::Transform( const PlantVertex& vertex, uint index, uint count, TransformType type )
 {
 
 	Vector3 Ro = vertex.position;
@@ -89,41 +87,11 @@ Plant::PlantVertex Plant::Transform( const PlantVertex& vertex, uint index, uint
 	return { R, level, N, delay };
 }
 
+
+
 // ----------------
 // --- Creation ---
 // ----------------
-void Plant::InitializeSystem( )
-{
-	//srand( 16 );
-	plantArray.resize( 100 );
-	dynamicDataBufferSize = 0;
-	for ( UINT i = 0; i < plantArray.size( ); i++ )
-	{
-		plantArray[i].location = Vector3::Randomize( { -150, 150 }, { 0, 0 }, { -50, 50 } );
-
-		bool tooClose = false;
-		for ( size_t j = 0; j < i; j++ )
-		{
-			Vector3 distance = plantArray[i].location - plantArray[j].location;
-			if ( distance.Length( ) < 10 )
-			{
-				tooClose = true;
-				break;
-			}
-		}
-		if ( tooClose )
-		{
-			i--;
-			continue;
-		}
-		//Plant::plantArray[i].location = { 0, 0, 0 };
-		plantArray[i].Create( );
-	}
-
-	//Plant::staticPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) *numComponents );
-	dynamicDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * dynamicDataBufferSize );
-}
-
 
 
 void Plant::Create( )
@@ -138,7 +106,7 @@ void Plant::Create( )
 
 	comp.parentIndex = 0;
 	comp.firstChildIndex = 2;
-	comp.childCount = floorf( RangeRand( CHILD_AMOUNT ) + 0.5f);
+	comp.childCount = floorf( RangeRand( CHILD_AMOUNT ) + 0.5f );
 	components.push_back( comp );
 
 	comp = { };
@@ -161,7 +129,7 @@ void Plant::Create( )
 		}
 
 		components[iComp].firstChildIndex = (int) components.size( );
-		components[iComp].childCount = floorf( RangeRand( CHILD_AMOUNT ) + 0.5f);
+		components[iComp].childCount = floorf( RangeRand( CHILD_AMOUNT ) + 0.5f );
 
 
 		nextLevelCount += components[iComp].childCount;
@@ -188,15 +156,15 @@ void Plant::Create( )
 			components.push_back( comp );
 	}
 
-
+	bufferLength = (uint) components.size( );
 
 	// --- Initialize tree data ---
 
-	staticData.resize( components.size( ) );
+	system->vertexData.resize( bufferIndex + components.size( ) );
 
 
-	staticData[0] = { location, 0, { 1, 0, 0 }, 0 };
-	staticData[1] = { { 0, BASE_LENGTH, 0 }, 1, { 1, 0, 0 }, 0 };
+	system->vertexData[bufferIndex + 0] = { location, 0, { 1, 0, 0 }, 0 };
+	system->vertexData[bufferIndex + 1] = { { 0, BASE_LENGTH, 0 }, 1, { 1, 0, 0 }, 0 };
 
 	for ( uint i = 2; i < components.size( ); i++ )
 	{
@@ -211,60 +179,60 @@ void Plant::Create( )
 		else
 			type = EVEN_DISTRIBUTION;
 
-		staticData[i] = Transform( staticData[parent], childnumber, siblingCount, type );
+		system->vertexData[bufferIndex + i] = Transform( system->vertexData[bufferIndex + parent], childnumber, siblingCount, type );
 	}
 
-	// --- Initialize buffer data ---
+	// --- Initialize index buffer data ---
 
 	GLShape& shape = object.shape;
-	const uint numComp = (uint) components.size( );
-	shape.indexCount = numComp * 2;
+
+	shape.indexCount = bufferLength * 2;
 	//?? shape.vertexCount = numComp * 2;
 	shape.primitiveType = GL_LINES;
 
-	ushort* indices = new ushort[numComp * 2];
-	memset( indices, 0, sizeof(ushort) *numComp * 2 );
+	ushort* indices = new ushort[bufferLength * 2];
+	memset( indices, 0, sizeof(ushort) *bufferLength * 2 );
 
-	for ( uint iComp = 1; iComp < numComp; iComp++ )
+	for ( uint iComp = 1; iComp < bufferLength; iComp++ )
 	{
-		indices[iComp * 2] = components[iComp].parentIndex;
-		indices[iComp * 2 + 1] = iComp;
+		indices[iComp * 2] = bufferIndex + components[iComp].parentIndex;
+		indices[iComp * 2 + 1] = bufferIndex + iComp;
 	}
 
-	glGenVertexArrays( 1, &shape.vertexArray );
-	glBindVertexArray( shape.vertexArray );
+	//glGenVertexArrays( 1, &shape.vertexArray );
+	//glBindVertexArray( shape.vertexArray );
 
-	//shape.vertexBuffer = GLFactory::CreateVertexBuffer( VERTEX_POSITION, 4, GL_FLOAT, NULL, sizeof(Vector4) * numComp );
 
 	// Buffer initialization. TODO: transfer to a factory method
-	GLuint handle;
-	glGenBuffers( 1, &handle );
-	glBindBuffer( GL_ARRAY_BUFFER, handle );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(PlantVertex) * numComp, NULL, GL_DYNAMIC_DRAW );
-
+	//GLuint handle;
+	//glGenBuffers( 1, &handle );
+	//glBindBuffer( GL_ARRAY_BUFFER, handle );
+	//glBufferData( GL_ARRAY_BUFFER, sizeof(PlantVertex) * bufferLength, NULL, GL_DYNAMIC_DRAW );
+	//
 	glEnableVertexAttribArray( VERTEX_POSITION );
 	glEnableVertexAttribArray( VERTEX_NORMAL );
 	glVertexAttribPointer( VERTEX_POSITION, 4, GL_FLOAT, GL_FALSE, 32, 0 );
 	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 4 );
-	shape.vertexBuffer = handle;
+	//shape.vertexBuffer = handle;
 
 
-	shape.indexBuffer = GLFactory::CreateIndexBuffer( indices, sizeof(ushort) *numComp * 2 );
+	shape.indexBuffer = GLFactory::CreateIndexBuffer( indices, sizeof(ushort) *bufferLength * 2 );
 
 	delete[] indices;
 
-	timeVal = 1.0f;
 
 	// Temporary line to omit leaf drawing
-	shape.indexCount = 2 * leavesIndex;
+	//shape.indexCount = 2 * leavesIndex;
 
 	// Initialize GPU buffer with static positions
-	staticDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) *GetComponentCount( ) );
+
+#if 0
+	staticDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) *components.size() );
 
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
 
 	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
-
+	glMapBufferRange
 	if ( !vertices ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
 
 
@@ -275,8 +243,7 @@ void Plant::Create( )
 
 	dynamicData.resize( components.size( ) );
 
-	if ( dynamicData.size( ) > dynamicDataBufferSize )
-		dynamicDataBufferSize = dynamicData.size( );
+#endif
 
 }
 
@@ -287,6 +254,7 @@ void Plant::Create( )
 
 void Plant::UpdateObject( )
 {
+#if 0
 	GLShape& shape = object.shape;
 
 	glBindVertexArray( shape.vertexArray );
@@ -312,15 +280,41 @@ void Plant::UpdateObject( )
 		vertices[iComp].delay = dynamicData[iComp].delay;
 	}
 	glUnmapBuffer( GL_ARRAY_BUFFER );
+#else
+
+	//PlantVertex* vertices = (PlantVertex*) glMapBufferRange( GL_ARRAY_BUFFER, bufferIndex*sizeof(PlantVertex), bufferLength*sizeof(PlantVertex), GL_READ_WRITE );
+	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
+
+	vertices[bufferIndex + 0] = { { 0, 0, 0 }, 1, { 1, 0, 0 }, 0 };
+
+	for ( uint iComp = 1; iComp < components.size( ); iComp++ )
+	{
+		uint iParent = components[iComp].parentIndex;
+		if ( iComp < leavesIndex )
+			vertices[bufferIndex + iComp].position += vertices[bufferIndex + iParent].position;
+		else
+		{
+			/*
+			uint iGrandparent = components[iParent].parentIndex;
+			vertices[iComp].position = dynamicData[iComp].position + vertices[iGrandparent].position
+				+ ( vertices[iParent].position - vertices[iGrandparent].position )*dynamicData[iComp].level;
+				*/
+		}
+		//vertices[iComp].level = dynamicData[iComp].level;
+		//vertices[iComp].normal = dynamicData[iComp].normal;
+		//vertices[iComp].delay = dynamicData[iComp].delay;
+	}
+	glUnmapBuffer( GL_ARRAY_BUFFER );
+#endif 
 }
 
 
 
-void Plant::Update( )
+void Plant::Update( float time )
 {
+#if 0
 	dynamicData[0] = staticData[0];
 
-	float t = Plant::timeVal;
 	Vector3 wind = { -1, 0, 0 };
 	wind *= 0.5f;
 
@@ -349,7 +343,7 @@ void Plant::Update( )
 
 		float w = 10.0f / pow( r, 1.0 );		//oscilation frequency
 
-		float a = 0.3f*Ao*sin( w*t );
+		float a = 0.3f*Ao*sin( w*time );
 
 		R = Wo.Rotate( a, n );
 
@@ -362,14 +356,13 @@ void Plant::Update( )
 		float delay = staticData[i].delay;
 		dynamicData[i] = { R, level, N, delay };
 	}
-
+#endif
 }
 
 void Plant::UpdateWithCompute( )
 {
-
+#if 0
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
 
 	uint numComponents = dynamicData.size( );
 
@@ -377,17 +370,14 @@ void Plant::UpdateWithCompute( )
 	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 
 
-	ReadDynamicData( );
 
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, 0 );
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, 0 );
-
+#endif
 }
 
 void Plant::ReadDynamicData( )
 {
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
-
+#if 0
 	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
 	if ( !vertices ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
 
@@ -397,8 +387,7 @@ void Plant::ReadDynamicData( )
 	//	dynamicData[iComp] = vertices[iComp];
 
 	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
-
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, 0 );
+#endif 
 }
 
 
@@ -411,6 +400,14 @@ void Plant::Draw( )
 	Matrix44 translation = Matrix44::MakeTranslation( location );
 	stack.MultMatrix( translation );
 	//object.shape.indexCount = leavesIndex * 2;
+
+
+	glEnableVertexAttribArray( VERTEX_POSITION );
+	glEnableVertexAttribArray( VERTEX_NORMAL );
+	glVertexAttribPointer( VERTEX_POSITION, 4, GL_FLOAT, GL_FALSE, 32, 0 );
+	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 4 );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, object.shape.indexBuffer );
+
 	object.Draw( );
 	stack.PopMatrix( );
 }

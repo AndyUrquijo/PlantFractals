@@ -142,6 +142,7 @@
     <ClCompile Include="Source\MatrixStack.cpp" />
     <ClCompile Include="Source\Plant.cpp" />
     <ClCompile Include="Source\GLText.cpp" />
+    <ClCompile Include="Source\PlantSystem.cpp" />
     <ClCompile Include="Source\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -161,6 +162,7 @@
     <ClInclude Include="Source\MatrixStack.h" />
     <ClInclude Include="Source\Plant.h" />
     <ClInclude Include="Source\GLText.h" />
+    <ClInclude Include="Source\PlantSystem.h" />
     <ClInclude Include="Source\WinApp.h" />
   </ItemGroup>
   <ItemGroup>

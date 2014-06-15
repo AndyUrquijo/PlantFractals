@@ -26,8 +26,8 @@ void GLText::ClearText( )
 }
 void GLText::AddText( wstring text, Vector2 position )
 {
-	float dx = 0.1f;
-	float dy = 0.1f;
+	float dx = cellSize.x*(2.0f/WinApp::clientWidth);
+	float dy = cellSize.y*(2.0f/WinApp::clientHeight);
 	Vector2 dY = { 0, dy };
 
 	positions.push_back( position );
@@ -37,7 +37,6 @@ void GLText::AddText( wstring text, Vector2 position )
 	factor.x = (float) cellSize.x / imageSize.x;
 	factor.y = (float) cellSize.y / imageSize.y;
 	int numCols = imageSize.x / cellSize.x;
-
 
 
 	int i = 0;

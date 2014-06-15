@@ -5,11 +5,13 @@
 #include <GL/wglew.h>
 #include "GLRenderer.h"
 
+
+UINT		WinApp::clientWidth		= 1600;
+UINT		WinApp::clientHeight	= 900;
+
 HINSTANCE	WinApp::application;
 WNDPROC		WinApp::appWndProc;
 HWND		WinApp::window;
-UINT		WinApp::clientWidth;
-UINT		WinApp::clientHeight;
 HDC			WinApp::deviceContext;
 HGLRC		WinApp::renderContext;
 
@@ -31,7 +33,7 @@ void WinApp::CreateApp( HINSTANCE hinst, WNDPROC proc )
 
 	if ( !RegisterClassEx( &wndClass ) ) ShowErrorMessage( L"Could not register window class" );
 
-	RECT window_size = { 0, 0, CLIENT_WIDTH, CLIENT_HEIGHT };
+	RECT window_size = { 0, 0, clientWidth, clientHeight };
 	AdjustWindowRect( &window_size, WS_OVERLAPPEDWINDOW, false );
 
 	window = CreateWindow( wndClass.lpszClassName, wndClass.lpszClassName, WS_OVERLAPPEDWINDOW & ~( WS_THICKFRAME | WS_MAXIMIZEBOX ),
@@ -90,7 +92,7 @@ void WinApp::InitializeOpenGL( )
 
 	deviceContext = GetDC( window );
 	GLRenderer& renderer = GLRenderer::GetInstance( );
-	renderer.Resize( CLIENT_WIDTH, CLIENT_HEIGHT );
+	renderer.Resize( clientWidth, clientHeight );
 
 	//*****
 	int nPixCount = 0;

@@ -11,6 +11,7 @@
 #include "MatrixStack.h"
 #include "GLShader.h"
 #include "GLText.h"
+#include "PlantSystem.h"
 
 //OpenGL Renderer
 class GLRenderer
@@ -22,16 +23,12 @@ class GLRenderer
 	MatrixStack			matrixStack;
 	Camera				camera;
 	Matrix44			projMatrix;
-
-
-	//Shaders
-
-	GLShader			plantShader;
-	GLShader			plantComputeShader;
+	Matrix44			viewProjection;
 
 	GLObject			cubeObj;
 
 	GLText				text;
+	PlantSystem			plantSystem;
 
 	public:
 	virtual ~GLRenderer( ) {};
@@ -44,10 +41,13 @@ class GLRenderer
 
 	inline static GLRenderer&	GetInstance( )					{ return instance; }
 	inline static GLShader&		GetShader( )					{ return *currShader; }
-	inline static void			SetShader( GLShader* shader )	{ currShader = shader; }
 	
-	inline Matrix44&			GetProjectionMatrix( )			{ return projMatrix; }
-	inline MatrixStack&			GetMatrixStack( )				{ return matrixStack; }
+	inline static Matrix44&		GetProjectionMatrix( )			{ return instance.projMatrix; }
+	inline static Matrix44&		GetViewProjectionMatrix( )		{ return instance.viewProjection; }
+	inline static MatrixStack&	GetMatrixStack( )				{ return instance.matrixStack; }
+
+	inline static void			SetShader( GLShader* shader )	{ currShader = shader; }
+
 
 };
 

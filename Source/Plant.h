@@ -5,6 +5,16 @@
 #include <vector>
 #include "GLSharedTypes.h"
 
+struct PlantVertex
+{
+	Vector3 position;	// contains the position in world space.
+	float	level;		// the level in the tree (0 for the root) // the position in the branch (for leaves)
+	Vector3 normal;		// a unit vector perpendicular to the branch's direction.
+	float	delay;
+};
+
+class PlantSystem;
+
 class Plant
 {
 	struct Component
@@ -17,48 +27,38 @@ class Plant
 
 	GLObject object;
 
+	public:
 	std::vector<Component> components;		// Tree components containing its hiearchycal info
 	uint leavesIndex;
 
-	struct PlantVertex
-	{
-		Vector3 position;	// contains the position in world space.
-		float	level;		// the level in the tree (0 for the root) // the position in the branch (for leaves)
-		Vector3 normal;		// a unit vector perpendicular to the branch's direction.
-		float	delay;
-	};
-
-	std::vector<PlantVertex> staticData;	//Represents the tree in its state of equilibrium
-	std::vector<PlantVertex> dynamicData;	//Represents the tree after being modified by external factors such as wind
+	static PlantSystem* system;
 
 
-	public:
 
-	GLuint	staticDataBuffer;
-	static GLuint	dynamicDataBuffer;
-	static GLuint	dynamicDataBufferSize;
+	//std::vector<PlantVertex> staticData;	//Represents the tree in its state of equilibrium
+	//std::vector<PlantVertex> dynamicData;	//Represents the tree after being modified by external factors such as wind
+
+
+	uint bufferIndex;
+	uint bufferLength;
+	//GLuint	staticDataBuffer;
 
 	Math::Vector3 location;
-
-	int GetComponentCount( ) { return (int) components.size( ); }
-
-	static void InitializeSystem( );
 
 	//Creates the tree structure of Components and the buffer that will be used on the GPU
 	void Create( );
 
-	void Update( );
+	void Update( float time );
+	void UpdateWithCompute( );
 	void ReadDynamicData( );
 
 	void UpdateObject( );
 
 	void Draw( );
 
-	static float timeVal;
-	static std::vector<Plant> plantArray;
-	void UpdateWithCompute( );
-
 	enum TransformType { KEEP_DIRECTION, EVEN_DISTRIBUTION, RANDOM_DISTRIBUTION };
 	PlantVertex Transform( const PlantVertex& vertex, uint index, uint count, TransformType type );
+
+
 };
 

@@ -26,20 +26,6 @@ void GLRenderer::Initialize( void )
 
 	glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
 
-	plantShader.CreateProgram( );
-	plantShader.LoadShader( "Shaders/Plant.vp", GL_VERTEX_SHADER );
-	plantShader.LoadShader( "Shaders/Plant.gp", GL_GEOMETRY_SHADER );
-	plantShader.LoadShader( "Shaders/Plant.fp", GL_FRAGMENT_SHADER );
-	plantShader.BindAttribute( VERTEX_POSITION, "_position" );
-	plantShader.BindAttribute( VERTEX_NORMAL, "_normal" );
-	plantShader.CompileProgram( );
-	plantShader.ObtainUniform( WORLD, "WORLD" );
-	plantShader.ObtainUniform( VP, "VP" );
-
-	plantComputeShader.CreateProgram( );
-	plantComputeShader.LoadShader( "Shaders/PlantUpdate.cp", GL_COMPUTE_SHADER );
-	plantComputeShader.CompileProgram( );
-	plantComputeShader.ObtainUniform( TIME, "TIME" );
 
 	camera.position = { 0, -15, 30 };
 
@@ -60,7 +46,7 @@ void GLRenderer::Initialize( void )
 
 void GLRenderer::InitializeObjects( void )
 {
-	Plant::InitializeSystem( );
+	plantSystem.Initialize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -131,66 +117,12 @@ void GLRenderer::Render( void )
 
 	camera.MoveCamera( );
 
-	Math::Matrix44 viewProjection = camera.MakeViewMatrix( )*projMatrix;
+	viewProjection = camera.MakeViewMatrix( )*projMatrix;
 
 
-	static Clock plantClock;
-	Plant::timeVal = plantClock.Watch( );
 
-#define USE_COMPUTE
-#define COMPUTE_FRAME_SKIP 1
-
-#ifdef USE_COMPUTE
-	plantComputeShader.Use( );
-	glUniform1f( plantComputeShader.GetUniform( TIME ), Plant::timeVal );
-#endif
-
-	static int frameSkip = 0;
-	if ( frameSkip++ == COMPUTE_FRAME_SKIP )
-		frameSkip = 0;
-
-	for ( UINT i = 0; i < Plant::plantArray.size( ); i++ )
-	{
-		if ( (i+frameSkip)%COMPUTE_FRAME_SKIP == 0 )
-		{
-#ifdef USE_COMPUTE
-			Plant::plantArray[i].UpdateWithCompute( );
-#else
-			Plant::plantArray[i].Update( );
-#endif
-		}
-	}
-
-
-	// Plant Draws
-	{
-
-		//Set blending
-		//glEnable( GL_BLEND );
-		glEnable( GL_DEPTH_TEST );
-		//glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-		//Set antialiasing/multisampling
-		//glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-		//glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-		//glEnable( GL_LINE_SMOOTH );
-		//glEnable( GL_POLYGON_SMOOTH );
-		//glEnable( GL_MULTISAMPLE );
-
-		glClear( GL_COLOR_BUFFER_BIT );
-		glClear( GL_DEPTH_BUFFER_BIT );
-
-
-		plantShader.Use( );
-		glUniformMatrix4fv( plantShader.GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
-
-		for ( UINT i = 0; i < Plant::plantArray.size( ); i++ )
-		{
-			Plant::plantArray[i].UpdateObject( );
-			Plant::plantArray[i].Draw( );
-		}
-	}
-
+	plantSystem.Update();
+	plantSystem.Render();
 
 	glDisable( GL_DEPTH_TEST );
 	text.DrawText( );

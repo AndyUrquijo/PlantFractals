@@ -4,9 +4,6 @@
     <ClCompile Include="Source\MatrixStack.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Plant.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Source\GLObject.cpp">
       <Filter>Source\Graphics Engine\Geometry</Filter>
     </ClCompile>
@@ -52,12 +49,15 @@
     <ClCompile Include="Source\Math.cpp">
       <Filter>Source\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Plant.cpp">
+      <Filter>Source\Plants</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlantSystem.cpp">
+      <Filter>Source\Plants</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\MatrixStack.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Plant.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Source\GLObjectSystem.h">
@@ -105,6 +105,12 @@
     <ClInclude Include="Source\Math.h">
       <Filter>Source\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Plant.h">
+      <Filter>Source\Plants</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlantSystem.h">
+      <Filter>Source\Plants</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -124,6 +130,9 @@
     </Filter>
     <Filter Include="Source\Utils">
       <UniqueIdentifier>{de073b45-a4a0-40fb-a0af-0f5ada1cd97d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Plants">
+      <UniqueIdentifier>{1a5813fd-841e-4458-aca9-6603ef2b99fb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

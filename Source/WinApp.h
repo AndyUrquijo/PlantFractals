@@ -5,8 +5,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-#define CLIENT_HEIGHT 600
-#define CLIENT_WIDTH 800
 
 //Wrapper for OpenGL Windows Applications
 struct WinApp
@@ -30,5 +28,4 @@ struct WinApp
 
 	static void InitializeOpenGL();
 	static void InitializeExtensions();
-
 };
