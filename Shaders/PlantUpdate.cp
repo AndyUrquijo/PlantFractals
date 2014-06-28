@@ -31,13 +31,11 @@ vec3 rotate( vec3 v, float angle, const vec3 w )
 	return v*cos_a + cross(v,w )*sin_a + w*( dot(v,w) )*( 1 - cos_a );	// Rodriges rotation formula
 }
 
-const vec3 wind = vec3(-1,0,0)*0.5;
+const vec3 wind = vec3(-1,0,0)*0.3;
 
-// Declare main program function which is executed once
-// glDispatchCompute is called from the application.
 void main()
 {
-	uint id = gl_GlobalInvocationID.x;
+	uint id = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y*100;
 	
 	float level = staticData.vertices[id].level;
 	float delay = staticData.vertices[id].delay;
@@ -47,11 +45,13 @@ void main()
 	vec3 R;
 	vec3 N;
 
+
+
 	float r = length(Ro);
 
-	float Wf = length(cross(Ro,wind));
+	float Wf = length(cross(Ro,wind))*level* (float(level>1.0));
 	vec3 Wo = Ro + wind*sqrt(Wf) ; // equilibrium position with wind
-	//Wo = normalize(Wo)*r;
+	Wo = normalize(Wo)*r;
 
 	float Ao = acos( dot( Ro, Wo ) / ( r*r ) ); //angle between Wo and Ro
 
@@ -66,7 +66,7 @@ void main()
 	vec3 pr = normalize( cross(R, Ro) );
 	float ar = acos( dot(Ro,R) / ( r*r ) );
 	N = rotate(No, a, pr);
-
+	
 	dynamicData.vertices[id].position = R;
 	dynamicData.vertices[id].normal= N;
 	dynamicData.vertices[id].level = level;

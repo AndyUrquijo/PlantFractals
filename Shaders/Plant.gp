@@ -1,9 +1,8 @@
-//Plant.vp
+//Plant.gp
 #version 110
 
 //#define LINE_TEST
 
-uniform mat4 WORLD;
 uniform mat4 VP;
 
 layout(lines) in;
@@ -17,6 +16,7 @@ layout (triangle_strip, max_vertices=8) out;
 in float vo_level[];
 in float vo_delay[];
 in vec3 vo_normal[];
+
 out vec3 go_normal;
 out vec3 go_color;
 
@@ -24,7 +24,7 @@ vec4 corners[6];
 
 
 const vec3 colorA = vec3(0.20, 0.15, 0.00); // start
-const vec3 colorB = vec3(0.10, 0.70, 0.00); // end
+const vec3 colorB = vec3(0.15, 0.30, 0.00); // end
 
 #define PI 3.1415926535897932384626433832795
 
@@ -49,52 +49,55 @@ bool IsOutOfView( vec2 v )
 void main()
 {
 
-vec3 dN[3];
-vec4 dNp[3];
+vec3 dNs[3];
+vec3 dNe[3];
 
 
-	vec4 Rs = gl_in[0].gl_Position; //start position
-	vec4 Re = gl_in[1].gl_Position; //end position
+	vec4 Rs = vec4(gl_in[0].gl_Position.xyz,1); //start position
+	vec4 Re = vec4(gl_in[1].gl_Position.xyz,1); //end position
 	
-	vec3 Ns = vo_normal[0]; //start normal
-	vec3 Ne = vo_normal[1]; //end normal
+	vec4 Ns = vec4(vo_normal[0],0); //start normal
+	vec4 Ne = vec4(vo_normal[1],0); //end normal
+
 
 	vec3 r = (Re - Rs).xyz;
 
-	float wdt = length( r )*0.06;
-	//float wdt = pow(length( r ),1.5)*0.015;
-	
+	float wdt[2];
+	wdt[0] = (7.5 - vo_level[0])*0.1;
+	wdt[1] = (7.5 - vo_level[1])*0.1;
+
+
+
+	//float wdt = 1.0;
+	//float wdt = length( r )*0.06;
+
 	vec3 ru = normalize(r);
-	vec3 n = normalize(Ne);
 	
-	dN[0] = n;
-	dN[1] = Rotate(n, PI*2/3, ru);
-	dN[2] = Rotate(n, -PI*2/3, ru);
+	dNs[0] = normalize(Ns);
+	dNs[1] = Rotate(dNs[0], PI*2/3, ru);
+	dNs[2] = Rotate(dNs[0], -PI*2/3, ru);
 
-	Rs = VP*Rs;
-	Re = VP*Re;
+	dNe[0] = normalize(Ne);
+	dNe[1] = Rotate(dNe[0], PI*2/3, ru);
+	dNe[2] = Rotate(dNe[0], -PI*2/3, ru);
 
+
+
+
+	corners[0] = VP * (Rs + vec4(dNs[0]*wdt[0],0) );
+	corners[1] = VP * (Rs + vec4(dNs[1]*wdt[0],0) );
+	corners[2] = VP * (Rs + vec4(dNs[2]*wdt[0],0) );
+
+	corners[3] = VP * (Re + vec4(dNe[0]*wdt[1],0) );
+	corners[4] = VP * (Re + vec4(dNe[1]*wdt[1],0) );
+	corners[5] = VP * (Re + vec4(dNe[2]*wdt[1],0) );
+	
 	// Omits very small branches (in screen size)
-	if( length( Rs.xy - Re.xy )/Rs.w < 0.01 )
-		return;
-	
-	if( IsOutOfView( Rs.xy/Rs.w ) && IsOutOfView( Re.xy/Re.w ) )
-		return;
-
-
-	dNp[0] = vec4( mat3(VP)*dN[0]*wdt , 0 );
-	dNp[1] = vec4( mat3(VP)*dN[1]*wdt , 0 );
-	dNp[2] = vec4( mat3(VP)*dN[2]*wdt , 0 );
-
-	corners[0] = Rs + dNp[0];
-	corners[1] = Rs + dNp[1];
-	corners[2] = Rs + dNp[2];
-
-	// top verts
-	corners[3] = Re + dNp[0];
-	corners[4] = Re + dNp[1];
-	corners[5] = Re + dNp[2];
-	
+	//if( length( corners[0].xy - corners[3].xy )/corners[0].w < 0.01 )
+	//	return;
+	//
+	//if( IsOutOfView( corners[0].xy/corners[0].w ) && IsOutOfView( corners[3].xy/corners[3].w ) )
+	//	return;
 
 
 	vec3 colorStart = mix( colorA, colorB, vo_level[0] /7);
@@ -103,36 +106,48 @@ vec4 dNp[3];
 
 #ifdef LINE_TEST
 	go_color = colorStart;
-	gl_Position = Rs;
+	gl_Position = VP *Rs;
 	EmitVertex();
 	go_color = colorEnd;
-	gl_Position = Re;
+	gl_Position = VP *Re;
 	EmitVertex();
+	EndPrimitive();
+
+	go_color = vec3(0.5,0.5,0);
+	gl_Position = VP *Re;
+	EmitVertex();
+	gl_Position = VP *(Re+Ne);
+	EmitVertex();
+
 	return;
 #endif
 
 
-	go_normal = dN[0];
+	go_normal = dNs[0];
 	go_color = colorStart;
 	EmitCorner(0);
+	go_normal = dNe[0];
 	go_color  = colorEnd;
 	EmitCorner(3);
 
-	go_normal = dN[1];
+	go_normal = dNs[1];
 	go_color  = colorStart;
 	EmitCorner(1);
+	go_normal = dNe[1];
 	go_color  = colorEnd;
 	EmitCorner(4);
 	
-	go_normal = dN[2];
+	go_normal = dNs[2];
 	go_color  = colorStart;
 	EmitCorner(2);
+	go_normal = dNe[2];
 	go_color  = colorEnd;
 	EmitCorner(5);
 
-	go_normal = dN[0];
+	go_normal = dNs[0];
 	go_color  = colorStart;
 	EmitCorner(0);
+	go_normal = dNe[0];
 	go_color  = colorEnd;
 	EmitCorner(3);
 }

@@ -7,10 +7,11 @@
 using std::string;
 #include "WinApp.h"
 
-#define PLANT_AMOUNT 50
+#define PLANT_AMOUNT 10
 
 void PlantSystem::Initialize( )
 {
+
 	// Intialize Shaders
 
 	drawShader.CreateProgram( );
@@ -20,8 +21,16 @@ void PlantSystem::Initialize( )
 	drawShader.BindAttribute( VERTEX_POSITION, "_position" );
 	drawShader.BindAttribute( VERTEX_NORMAL, "_normal" );
 	drawShader.CompileProgram( );
-	drawShader.ObtainUniform( WORLD, "WORLD" );
 	drawShader.ObtainUniform( VP, "VP" );
+
+	drawLeavesShader.CreateProgram( );
+	drawLeavesShader.LoadShader( "Shaders/Plant.vp", GL_VERTEX_SHADER );
+	drawLeavesShader.LoadShader( "Shaders/Leaf.gp", GL_GEOMETRY_SHADER );
+	drawLeavesShader.LoadShader( "Shaders/Leaf.fp", GL_FRAGMENT_SHADER );
+	drawLeavesShader.BindAttribute( VERTEX_POSITION, "_position" );
+	drawLeavesShader.BindAttribute( VERTEX_NORMAL, "_normal" );
+	drawLeavesShader.CompileProgram( );
+	drawLeavesShader.ObtainUniform( VP, "VP" );
 
 	updateShader.CreateProgram( );
 	updateShader.LoadShader( "Shaders/PlantUpdate.cp", GL_COMPUTE_SHADER );
@@ -30,18 +39,18 @@ void PlantSystem::Initialize( )
 
 	Plant::system = this;
 
-	//srand( 16 );
+	srand( 100 );
 	plantArray.resize( PLANT_AMOUNT );
 	dataBufferSize = 0;
-	for ( size_t i = 0; i < plantArray.size( ); i++ )
+	for ( int i = 0; i < plantArray.size( ); i++ )
 	{
-		plantArray[i].location = Vector3::Randomize( { -150, 150 }, { 0, 0 }, { -50, 50 } );
-
+		plantArray[i].location = Vector3::Randomize( { -10,10 }, { 0, 0 }, { -10, 10 } )*20;
+		
 		bool tooClose = false;
 		for ( size_t j = 0; j < i; j++ )
 		{
 			Vector3 distance = plantArray[i].location - plantArray[j].location;
-			if ( distance.Length( ) < 10 )
+			if ( distance.Length( ) < 20 )
 			{
 				tooClose = true;
 				i--;
@@ -57,14 +66,6 @@ void PlantSystem::Initialize( )
 	}
 
 
-
-
-	string message = "Dynamic buffer length: " + std::to_string( dataBufferSize*sizeof( PlantVertex ) ) + " bytes\n";
-	GLint number;	glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &number );
-	message += "Group Count max: " + std::to_string( number ) + "\n";
-
-	OutputDebugStringA( message.c_str( ) );
-	//Plant::staticPositionsBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(Vector4) *numComponents );
 	staticDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * dataBufferSize );
 	dynamicDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * dataBufferSize );
 
@@ -87,17 +88,8 @@ void PlantSystem::Initialize( )
 
 void PlantSystem::Update( )
 {
-#define USE_COMPUTE
-#define COMPUTE_FRAME_SKIP 1
-
 	static Clock plantClock;
 	timeVal = plantClock.Watch( );
-
-	static int frameSkip = 0;
-	if ( frameSkip++ == COMPUTE_FRAME_SKIP )
-		frameSkip = 0;
-
-#ifdef USE_COMPUTE
 
 	updateShader.Use( );
 	glUniform1f( updateShader.GetUniform( TIME ), timeVal );
@@ -105,37 +97,21 @@ void PlantSystem::Update( )
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
 
-	glDispatchCompute( dataBufferSize, 1, 1 );
+	glDispatchCompute( 100, dataBufferSize/100 + 1, 1 );
 	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, 0 );
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, 0 );
 
 
-
-#if 0
-	for ( size_t i = 0; i < plantArray.size( ); i++ )
-	{
-		if ( ( i + frameSkip ) % COMPUTE_FRAME_SKIP == 0 )
-		{
-			glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
-			plantArray[i].UpdateWithCompute( );
-			glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
-			plantArray[i].ReadDynamicData( );
-			glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, 0 );
-
-		}
-	}
-#endif 
-#else
+	// Translate positions along the hiearchy
+	glBindBuffer( GL_ARRAY_BUFFER, dynamicDataBuffer );
+	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
-	{
-		if ( ( i + frameSkip ) % COMPUTE_FRAME_SKIP == 0 )
-			plantArray[i].Update( timeVal );
-	}
+		plantArray[i].UpdateObject( vertices );
 
-#endif
+	glUnmapBuffer( GL_ARRAY_BUFFER );
 }
 
 
@@ -149,23 +125,32 @@ void PlantSystem::Render( )
 
 	//Set antialiasing/multisampling
 	//glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-	//glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+	glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 	//glEnable( GL_LINE_SMOOTH );
-	//glEnable( GL_POLYGON_SMOOTH );
-	//glEnable( GL_MULTISAMPLE );
+	glEnable( GL_POLYGON_SMOOTH );
+	glEnable( GL_MULTISAMPLE );
 
 	glClear( GL_COLOR_BUFFER_BIT );
 	glClear( GL_DEPTH_BUFFER_BIT );
 
 
+
 	drawShader.Use( );
+	glLineWidth(4.0f);
 	glUniformMatrix4fv( drawShader.GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
-
-	glBindBuffer( GL_ARRAY_BUFFER, dynamicDataBuffer );
+	
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
-	{
-		plantArray[i].UpdateObject( );
-		plantArray[i].Draw( );
-	}
-}
+		plantArray[i].Draw( Plant::DRAW_BRANCHES );
 
+	
+	drawLeavesShader.Use( );
+	glLineWidth(8.0f);
+	glUniformMatrix4fv( drawShader.GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
+	
+	for ( size_t i = 0; i < plantArray.size( ); i++ )
+		plantArray[i].Draw( Plant::DRAW_LEAVES );
+		
+  
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+
+}

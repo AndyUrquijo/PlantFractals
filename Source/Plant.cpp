@@ -17,10 +17,13 @@
 using Math::Vector3;
 
 
-#define LEAF_AMOUNT 0
-#define LAST_LEVEL 7
-#define BASE_LENGTH 10.0f
-#define APERTURE 0.18*PI
+#define LEAF_AMOUNT		5
+#define LAST_LEVEL		7
+#define BASE_LENGTH		10.0f
+#define APERTURE		0.18*PI
+#define LEAF_LENGTH		1.0f	
+#define LEAF_WIDTH		0.4f	
+
 
 /// Random ranges
 #define CHILD_AMOUNT		1,		5
@@ -28,7 +31,6 @@ using Math::Vector3;
 #define TWIST_RATIO			0.5,	0.7
 #define DISTRIB_RATIO		0.0,	1.0
 #define APERTURE_RATIO		0.8,	1.2
-
 
 PlantSystem* Plant::system;
 
@@ -48,14 +50,14 @@ PlantVertex Plant::Transform( const PlantVertex& vertex, uint index, uint count,
 
 	switch ( type )
 	{
-		case KEEP_DIRECTION:
+		case BRANCH_STRAIGHT:
 		{ {
 			R = Ro*RangeRand( STRAIGHT_RATIO );
-			N = No;
+			N = No.Normalize( );;
 			level = vertex.level + 1;
 		} } break;
 		break;
-		case EVEN_DISTRIBUTION:
+		case BRANCH_FORK:
 		{ {
 			float phi = RangeRand( APERTURE_RATIO )*APERTURE;
 			float theta = ( RangeRand( DISTRIB_RATIO ) + index )*( 2 * PI / ( count - 1 ) );
@@ -66,17 +68,15 @@ PlantVertex Plant::Transform( const PlantVertex& vertex, uint index, uint count,
 
 			level = vertex.level + 1;
 		} } break;
-		case Plant::RANDOM_DISTRIBUTION:
+		case LEAF:
 		{ {
 			float phi = RangeRand( APERTURE_RATIO )*APERTURE;
 			float theta = RangeRand( 0.0, 2 * PI );
 
 			Vector3 S = No.Rotate( theta, Ro.Normalize( ) ).Normalize( );
-			R = Ro.Rotate( phi, S ).Normalize( )*Ro.Length( )*RangeRand( 0.5f, 0.7f );
-			N = No.Rotate( phi, S ).Normalize( );
-
-			// level = float( index ) / LEAF_AMOUNT;
-			level = RangeRand( 0, 1 );
+			R = Ro.Rotate( phi, S ).Normalize( )*LEAF_LENGTH;
+			N = No.Rotate( phi, S ).Normalize( )*LEAF_WIDTH;
+			level =  RangeRand( 0, 1 );
 
 		} } break;
 	}
@@ -98,6 +98,8 @@ void Plant::Create( )
 {
 	// --- Initialize tree structure ---
 
+	components.resize( 0 );
+
 	Component comp;
 	comp.parentIndex = 0;
 	comp.firstChildIndex = 1;
@@ -115,15 +117,19 @@ void Plant::Create( )
 	uint nextLevelCount = comp.childCount;
 
 	uint lastLevelIndex = 0;
+	
+	//Create Branches
+	
 	for ( uint iComp = 1;; iComp++ )
 	{
 		if ( currLevelLeft == 0 ) // Reached next level in the tree
 		{
-			if ( ++level == LAST_LEVEL )
-			{
-				lastLevelIndex = iComp;
+			++level;
+			if ( level == LAST_LEVEL )
 				break;
-			}
+			else if( !lastLevelIndex && level == LAST_LEVEL - 1 )
+				lastLevelIndex = iComp;
+
 			currLevelLeft = nextLevelCount;
 			nextLevelCount = 0;
 		}
@@ -141,12 +147,15 @@ void Plant::Create( )
 		for ( uint iChild = 0; iChild < components[iComp].childCount; iChild++ )
 			components.push_back( comp );
 	}
+	//end of branch creation
 
 	leavesIndex = components.size( );
+
+	// Add leaves as children of the modes on latest level
 	for ( uint iComp = lastLevelIndex; iComp < leavesIndex; iComp++ )
 	{
-		components[iComp].firstChildIndex = (int) components.size( );
-		components[iComp].childCount = LEAF_AMOUNT;
+		//components[iComp].firstChildIndex = (int) components.size( );
+		//components[iComp].childCount = LEAF_AMOUNT;
 
 		comp.parentIndex = iComp;
 		comp.firstChildIndex = 0;
@@ -163,88 +172,70 @@ void Plant::Create( )
 	system->vertexData.resize( bufferIndex + components.size( ) );
 
 
-	system->vertexData[bufferIndex + 0] = { location, 0, { 1, 0, 0 }, 0 };
+	system->vertexData[bufferIndex + 0] = { { 0, 0, 0 }, 0, { 1, 0, 0 }, 0 };
 	system->vertexData[bufferIndex + 1] = { { 0, BASE_LENGTH, 0 }, 1, { 1, 0, 0 }, 0 };
 
-	for ( uint i = 2; i < components.size( ); i++ )
+	for ( uint iV = 2; iV < components.size( ); iV++ )
 	{
-		uint parent = components[i].parentIndex;
-		uint childnumber = i - components[parent].firstChildIndex;
+		uint parent = components[iV].parentIndex;
+		uint childnumber = iV - components[parent].firstChildIndex;
 		uint siblingCount = components[parent].childCount;
 		TransformType type;
-		if ( i >= leavesIndex )
-			type = RANDOM_DISTRIBUTION;
+		if ( iV >= leavesIndex )
+			type = LEAF;
 		else if ( childnumber == siblingCount - 1 )
-			type = KEEP_DIRECTION;
+			type = BRANCH_STRAIGHT;
 		else
-			type = EVEN_DISTRIBUTION;
+			type = BRANCH_FORK;
 
-		system->vertexData[bufferIndex + i] = Transform( system->vertexData[bufferIndex + parent], childnumber, siblingCount, type );
+		system->vertexData[bufferIndex + iV] = Transform( system->vertexData[bufferIndex + parent], childnumber, siblingCount, type );
 	}
 
 	// --- Initialize index buffer data ---
 
-	GLShape& shape = object.shape;
-
-	shape.indexCount = bufferLength * 2;
-	//?? shape.vertexCount = numComp * 2;
-	shape.primitiveType = GL_LINES;
-
-	ushort* indices = new ushort[bufferLength * 2];
-	memset( indices, 0, sizeof(ushort) *bufferLength * 2 );
-
-	for ( uint iComp = 1; iComp < bufferLength; iComp++ )
+	// branches data
 	{
-		indices[iComp * 2] = bufferIndex + components[iComp].parentIndex;
-		indices[iComp * 2 + 1] = bufferIndex + iComp;
+		GLShape& shape = branchesObject.shape;
+		shape.indexCount = leavesIndex * 2;
+		shape.primitiveType = GL_LINES;
+
+		uint* bIndices = new uint[shape.indexCount];
+		memset( bIndices, 0, sizeof(uint) *shape.indexCount );
+
+		for ( uint iComp = 1; iComp < leavesIndex; iComp++ )
+		{
+			bIndices[iComp * 2] = bufferIndex + components[iComp].parentIndex;
+			bIndices[iComp * 2 + 1] = bufferIndex + iComp;
+		}
+
+		shape.indexBuffer = GLFactory::CreateIndexBuffer( bIndices, sizeof(uint) * shape.indexCount );
+
+		delete[] bIndices;
 	}
 
-	//glGenVertexArrays( 1, &shape.vertexArray );
-	//glBindVertexArray( shape.vertexArray );
+	// leaves data
+	{
+		GLShape& shape = leavesObject.shape;
+		shape.indexCount = ( bufferLength - leavesIndex ) * 3;
+		shape.primitiveType = GL_TRIANGLES;
 
+		uint* lIndices = new uint[shape.indexCount];
+		memset( lIndices, 0, sizeof(uint) *shape.indexCount );
 
-	// Buffer initialization. TODO: transfer to a factory method
-	//GLuint handle;
-	//glGenBuffers( 1, &handle );
-	//glBindBuffer( GL_ARRAY_BUFFER, handle );
-	//glBufferData( GL_ARRAY_BUFFER, sizeof(PlantVertex) * bufferLength, NULL, GL_DYNAMIC_DRAW );
-	//
-	glEnableVertexAttribArray( VERTEX_POSITION );
-	glEnableVertexAttribArray( VERTEX_NORMAL );
-	glVertexAttribPointer( VERTEX_POSITION, 4, GL_FLOAT, GL_FALSE, 32, 0 );
-	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 4 );
-	//shape.vertexBuffer = handle;
+		for ( uint iComp = leavesIndex; iComp < bufferLength; iComp++ )
+		{
+			uint iIndex = iComp - leavesIndex;
+			GLushort& iParent = components[iComp].parentIndex;
+			GLushort& iGrandparent = components[iParent].parentIndex;
+			lIndices[iIndex * 3 + 0] = bufferIndex + iGrandparent;
+			lIndices[iIndex * 3 + 1] = bufferIndex + iParent;
+			lIndices[iIndex * 3 + 2] = bufferIndex + iComp;
+		}
 
+		shape.indexBuffer = GLFactory::CreateIndexBuffer( lIndices, sizeof(uint) * shape.indexCount );
 
-	shape.indexBuffer = GLFactory::CreateIndexBuffer( indices, sizeof(ushort) *bufferLength * 2 );
-
-	delete[] indices;
-
-
-	// Temporary line to omit leaf drawing
-	//shape.indexCount = 2 * leavesIndex;
-
-	// Initialize GPU buffer with static positions
-
-#if 0
-	staticDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) *components.size() );
-
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
-
-	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
-	glMapBufferRange
-	if ( !vertices ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
-
-
-	for ( uint iComp = 0; iComp < components.size( ); iComp++ )
-		vertices[iComp] = staticData[iComp];
-
-	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
-
-	dynamicData.resize( components.size( ) );
-
-#endif
-
+		delete[] lIndices;
+	}
 }
 
 // --------------
@@ -252,163 +243,41 @@ void Plant::Create( )
 // --------------
 
 
-void Plant::UpdateObject( )
+void Plant::UpdateObject( PlantVertex* const vertices )
 {
-#if 0
-	GLShape& shape = object.shape;
-
-	glBindVertexArray( shape.vertexArray );
-	glBindBuffer( GL_ARRAY_BUFFER, shape.vertexBuffer );
-
-	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
-
-	vertices[0] = { { 0, 0, 0 }, 1, { 1, 0, 0 }, 0 };
-
-	for ( uint iComp = 1; iComp < components.size( ); iComp++ )
-	{
-		uint iParent = components[iComp].parentIndex;
-		if ( iComp < leavesIndex )
-			vertices[iComp].position = dynamicData[iComp].position + vertices[iParent].position;
-		else
-		{
-			uint iGrandparent = components[iParent].parentIndex;
-			vertices[iComp].position = dynamicData[iComp].position + vertices[iGrandparent].position
-				+ ( vertices[iParent].position - vertices[iGrandparent].position )*dynamicData[iComp].level;
-		}
-		vertices[iComp].level = dynamicData[iComp].level;
-		vertices[iComp].normal = dynamicData[iComp].normal;
-		vertices[iComp].delay = dynamicData[iComp].delay;
-	}
-	glUnmapBuffer( GL_ARRAY_BUFFER );
-#else
 
 	//PlantVertex* vertices = (PlantVertex*) glMapBufferRange( GL_ARRAY_BUFFER, bufferIndex*sizeof(PlantVertex), bufferLength*sizeof(PlantVertex), GL_READ_WRITE );
-	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
 
-	vertices[bufferIndex + 0] = { { 0, 0, 0 }, 1, { 1, 0, 0 }, 0 };
+	vertices[bufferIndex + 0].position =  location;
+	vertices[bufferIndex + 0].normal = { 1, 0, 0 };
+	vertices[bufferIndex + 0].level = 0;
+	vertices[bufferIndex + 0].delay = 0;
 
-	for ( uint iComp = 1; iComp < components.size( ); iComp++ )
+	for ( uint iComp = 1; iComp < leavesIndex; iComp++ )
 	{
 		uint iParent = components[iComp].parentIndex;
-		if ( iComp < leavesIndex )
-			vertices[bufferIndex + iComp].position += vertices[bufferIndex + iParent].position;
-		else
-		{
-			/*
-			uint iGrandparent = components[iParent].parentIndex;
-			vertices[iComp].position = dynamicData[iComp].position + vertices[iGrandparent].position
-				+ ( vertices[iParent].position - vertices[iGrandparent].position )*dynamicData[iComp].level;
-				*/
-		}
-		//vertices[iComp].level = dynamicData[iComp].level;
-		//vertices[iComp].normal = dynamicData[iComp].normal;
-		//vertices[iComp].delay = dynamicData[iComp].delay;
+		vertices[bufferIndex + iComp].position += vertices[bufferIndex + iParent].position;
 	}
-	glUnmapBuffer( GL_ARRAY_BUFFER );
-#endif 
 }
 
 
 
-void Plant::Update( float time )
+void Plant::Draw( DrawType drawtype )
 {
-#if 0
-	dynamicData[0] = staticData[0];
-
-	Vector3 wind = { -1, 0, 0 };
-	wind *= 0.5f;
-
-	for ( uint i = 1; i < components.size( ); i++ )
-	{
-		const Vector3 Ro = (Vector3) staticData[i].position;
-		const Vector3 No = (Vector3) staticData[i].normal;
-
-		Vector3 R;
-		Vector3 N;
-
-
-		//float d = components[i].delay;
-
-		float r = Ro.Length( );
-
-		float Wf = Ro.Cross( wind ).Length( );
-		Vector3 Wo = Ro + pow( Wf, 0.5 )*wind; // equilibrium position with wind
-		Wo = Wo.Normalize( )*r;
-
-		float Ao = acos( ( Ro*Wo ) / ( r*r ) ); //angle between Wo and Ro
-
-		Vector3 n = Ro.Cross( Wo );	//unit vector normal to Rp and Wo
-		if ( !n.IsZero( ) )
-			n = n.Normalize( );
-
-		float w = 10.0f / pow( r, 1.0 );		//oscilation frequency
-
-		float a = 0.3f*Ao*sin( w*time );
-
-		R = Wo.Rotate( a, n );
-
-		Vector3 pr = Ro.Cross( R ).Normalize( );
-		float ar = acos( ( Ro*R ) / ( r*r ) );
-
-		N = No.Rotate( ar, pr );
-
-		float level = staticData[i].level;
-		float delay = staticData[i].delay;
-		dynamicData[i] = { R, level, N, delay };
-	}
-#endif
-}
-
-void Plant::UpdateWithCompute( )
-{
-#if 0
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
-
-	uint numComponents = dynamicData.size( );
-
-	glDispatchCompute( numComponents, 1, 1 );
-	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
-
-
-
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, 0 );
-#endif
-}
-
-void Plant::ReadDynamicData( )
-{
-#if 0
-	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
-	if ( !vertices ) return WinApp::ShowErrorMessage( L"Couldn't read the positions buffer" );
-
-	memcpy_s( &dynamicData[0], sizeof(PlantVertex) *dynamicData.size( ), vertices, sizeof(PlantVertex) *dynamicData.size( ) );
-
-	//for ( uint iComp = 0; iComp < dynamicData.size( ); iComp++ )
-	//	dynamicData[iComp] = vertices[iComp];
-
-	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
-#endif 
-}
-
-
-void Plant::Draw( )
-{
-	GLRenderer& renderer = GLRenderer::GetInstance( );
-	MatrixStack& stack = renderer.GetMatrixStack( );
-
-	stack.PushMatrix( );
-	Matrix44 translation = Matrix44::MakeTranslation( location );
-	stack.MultMatrix( translation );
-	//object.shape.indexCount = leavesIndex * 2;
-
-
 	glEnableVertexAttribArray( VERTEX_POSITION );
 	glEnableVertexAttribArray( VERTEX_NORMAL );
 	glVertexAttribPointer( VERTEX_POSITION, 4, GL_FLOAT, GL_FALSE, 32, 0 );
-	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 4 );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, object.shape.indexBuffer );
+	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 16 );
 
-	object.Draw( );
-	stack.PopMatrix( );
+	switch ( drawtype )
+	{
+		case Plant::DRAW_BRANCHES:
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, branchesObject.shape.indexBuffer );
+		branchesObject.shape.Draw( );
+		break;
+		case Plant::DRAW_LEAVES:
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, leavesObject.shape.indexBuffer );
+		leavesObject.shape.Draw( );
+		break;
+	}
 }
-

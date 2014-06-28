@@ -457,9 +457,9 @@ namespace Math
 		float s = sin( angle ), c = cos( angle );
 		Matrix44 zRotation =
 		{
-			1, 0, 0, 0,
-			0, 1, s, 0,
-			0, -s, c, 0,
+			c, s, 0, 0,
+			-s,	c, 0, 0,
+			0, 0, 1, 0,
 			0, 0, 0, 1,
 		};
 		return zRotation;

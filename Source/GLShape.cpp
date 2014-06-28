@@ -3,7 +3,7 @@
 void GLShape::Draw( )
 {
 	glBindVertexArray( vertexArray );
-	glDrawElements( primitiveType, indexCount, GL_UNSIGNED_SHORT, 0 );
+	glDrawElements( primitiveType, indexCount, GL_UNSIGNED_INT, 0 );
 }
 
 void GLSimpleShape::Draw( )

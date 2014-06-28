@@ -154,5 +154,11 @@
     <None Include="Shaders\PlantUpdate.cp">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\Leaf.gp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Leaf.fp">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

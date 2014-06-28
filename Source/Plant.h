@@ -25,7 +25,8 @@ class Plant
 	};
 
 
-	GLObject object;
+	GLObject branchesObject;
+	GLObject leavesObject;
 
 	public:
 	std::vector<Component> components;		// Tree components containing its hiearchycal info
@@ -48,15 +49,12 @@ class Plant
 	//Creates the tree structure of Components and the buffer that will be used on the GPU
 	void Create( );
 
-	void Update( float time );
-	void UpdateWithCompute( );
-	void ReadDynamicData( );
+	void UpdateObject( PlantVertex* const vertices );
 
-	void UpdateObject( );
+	enum DrawType { DRAW_BRANCHES, DRAW_LEAVES };
+	void Draw( DrawType drawtype );
 
-	void Draw( );
-
-	enum TransformType { KEEP_DIRECTION, EVEN_DISTRIBUTION, RANDOM_DISTRIBUTION };
+	enum TransformType { BRANCH_STRAIGHT, BRANCH_FORK, LEAF };
 	PlantVertex Transform( const PlantVertex& vertex, uint index, uint count, TransformType type );
 
 

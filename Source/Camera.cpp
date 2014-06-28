@@ -76,9 +76,16 @@ void Camera::MoveCamera( )
 	{
 		if ( GetAsyncKeyState( VK_LEFT ) ) 		dW.y--;
 		if ( GetAsyncKeyState( VK_RIGHT ) )		dW.y++;
-		if ( GetAsyncKeyState( VK_UP ) )		dW.x--;
-		if ( GetAsyncKeyState( VK_DOWN ) )		dW.x++;
-
+		if ( GetAsyncKeyState( VK_CONTROL ) )
+		{
+			if ( GetAsyncKeyState( VK_UP ) )		dW.z--;
+			if ( GetAsyncKeyState( VK_DOWN ) )		dW.z++;
+		}
+		else
+		{
+			if ( GetAsyncKeyState( VK_UP ) )		dW.x--;
+			if ( GetAsyncKeyState( VK_DOWN ) )		dW.x++;
+		}
 		if ( !dW.IsZero( ) )
 			angularVelocity += dW.Normalize( )*CAMERA_ANGULAR_ACCELERATION*dt;
 	}

@@ -34,10 +34,10 @@ typedef float4x4		FLOAT4X4;
 enum GLVertexAttribute
 {
 	VERTEX_POSITION,
+	VERTEX_NORMAL,
 	VERTEX_COLOR,
 	VERTEX_TEXTURE,
 	VERTEX_TEXTURE0 = VERTEX_TEXTURE,
-	VERTEX_NORMAL,
 };
 enum GLVertexAttributeBit
 {

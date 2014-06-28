@@ -1,8 +1,5 @@
 #version 110
 
-uniform mat4 WORLD;
-uniform mat4 VP;
-
 attribute vec4 _position;
 attribute vec4 _normal; 
 
@@ -15,6 +12,6 @@ void main()
 	vo_level = _position.w;
 	vo_delay = _normal.w;
 
-	gl_Position = WORLD*vec4(_position.xyz, 1);
-	vo_normal = vec3(WORLD*vec4(_normal.xyz, 0));
+	gl_Position = vec4(_position.xyz, 1);
+	vo_normal = _normal.xyz;
 }
