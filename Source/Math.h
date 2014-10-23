@@ -18,13 +18,16 @@ namespace Math
 
 	struct Short2;
 
-	static const float PI = 3.14159265359f;
+	static const float PI =	3.14159265359f;	// The number pi.
 
+	// Returns a random number in the range [0, 1)
 	float UnitRand( );
+	// Returns a random number in the range [min, max)
 	float RangeRand( float min, float max );
+	// Clamps a value to the range [min, max]
 	float Clamp( float value, float min, float max );
 
-
+	
 	//-----------------
 	// Vector2
 	//-----------------
@@ -230,7 +233,15 @@ namespace Math
 	{
 		union
 		{
-			/*struct
+			struct
+			{
+				float
+				xx, xy, xz, xw,
+				yx, yy, yz, yw,
+				zx, zy, zz, zw,
+				wx, wy, wz, ww;
+			};
+			struct
 			{
 			Vector3 xAxis;
 			float	xPadding;
@@ -240,7 +251,7 @@ namespace Math
 			float	zPadding;
 			Vector3 wAxis;
 			float	wPadding;
-			};*/
+			};
 			float m[4][4];
 			float elm[16];
 		};

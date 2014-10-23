@@ -44,13 +44,14 @@ class Plant
 	uint bufferLength;
 	//GLuint	staticDataBuffer;
 
-	Math::Vector3 location;
+	std::vector<Math::Vector3> locations;
 
 	//Creates the tree structure of Components and the buffer that will be used on the GPU
 	void Create( );
 
 	void UpdateObject( PlantVertex* const vertices );
-
+	
+	
 	enum DrawType { DRAW_BRANCHES, DRAW_LEAVES };
 	void Draw( DrawType drawtype );
 

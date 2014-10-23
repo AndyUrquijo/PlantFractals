@@ -19,11 +19,9 @@ in vec3 vo_normal[];
 out vec3 go_normal;
 out vec3 go_color;
 
-const vec3 colorLeaf = vec3(0.40, 0.80, 0.10); 
+const vec3 colorLeaf = vec3(0.1, 0.70, 0.05); 
+const vec3 colorLeafB = vec3(0.2, 0.40, 0.0); 
 const vec3 colorBranch = vec3(0.00, 0.00, 1.00); 
-
-
-//const vec3 colorB = vec3(0.10, 0.70, 0.00); // end
 
 #define PI 3.1415926535897932384626433832795
 
@@ -50,15 +48,13 @@ void main()
 	vec4 Bs = vec4(gl_in[0].gl_Position.xyz,1);		// branch start
 	vec4 Be = vec4(gl_in[1].gl_Position.xyz,1);		// branch end
 
-	vec4 Rs = Bs + (Be - Bs)*vo_level[2]; // leaf start
+	vec4 Rs = Bs + (Be - Bs)*vo_level[2]*(-1); // leaf start
 	//vec4 Rs = Bs;
-	vec4 Re = Rs +  vec4(gl_in[2].gl_Position.xyz,0); // leaf end
+	vec4 Re = Rs +  vec4(normalize(gl_in[2].gl_Position.xyz),0); // leaf end
 
 	vec3 N = vo_normal[2]; //end normal
 
 
-
-	
 #ifdef LINE_TEST
 	//go_color = colorBranch;
 	//gl_Position = VP*Bs;
@@ -100,36 +96,34 @@ void main()
 	//if( IsOutOfView( Rs.xy/Rs.w ) && IsOutOfView( Re.xy/Re.w ) )
 	//	return;
 
-	//corners[0] = VP * Rs;
-	//corners[1] = VP * Re;
-	//
-	//corners[2] = VP * (Rm + dRp);
-	//corners[3] = VP * (Rm - dRp);
+	vec4 corners[4];
+	corners[0] = VP * Rr; 
+	corners[1] = VP * Re; 
+	corners[2] = VP * (Rm + dRp); 
+	corners[3] = VP * (Rm - dRp); 
 
+	vec3 A,B;
+	A.xy = corners[2].xy - corners[0].xy;	A.z = 0;
+	B.xy = corners[3].xy - corners[0].xy;	B.z = 0;
 
-	go_color = colorLeaf;
-	go_normal = N;
+	int N_sign = int(cross(A,B).z > 0)*2 - 1;
+	go_normal = N*N_sign;
 
 	//Leaf
-	gl_Position = VP * (Rm + dRp);
+	go_color = colorLeafB;
+	gl_Position = corners[3];
 	EmitVertex();
-	gl_Position = VP * Rr;
-	EmitVertex();
-	gl_Position = VP * Re;
-	EmitVertex();
-	gl_Position = VP * (Rm - dRp);
-	EmitVertex();
-	EndPrimitive();
 
-	Rr = vec4(mix(Rs, Re, 0.15).xyz, 1);
+	go_color = colorLeaf;
+	gl_Position = corners[0];
+	EmitVertex();
+	gl_Position = corners[1];
+	EmitVertex();
 
-	//Stem
-	gl_Position = VP * Rs;
+	go_color = colorLeafB;
+	gl_Position = corners[2];
 	EmitVertex();
-	gl_Position = VP * (Rr + 0.1*dRp);
-	EmitVertex();
-	gl_Position = VP * (Rr - 0.1*dRp);
-	EmitVertex();
+
 #endif
 
 

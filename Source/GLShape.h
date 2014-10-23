@@ -2,15 +2,15 @@
 
 #include <GL\glew.h>
 
-struct GLShape
+struct GLShapeIndexed
 {
 	GLuint vertexArray;
 	
-	GLuint vertexBuffer;
 	GLuint indexBuffer;
-	
 	GLuint indexCount;
-	//GLuint vertexCount;
+
+	GLuint vertexBuffer;
+	GLuint vertexCount;
 
 	GLenum primitiveType;
 
@@ -18,7 +18,7 @@ struct GLShape
 	void Draw( );
 };
 
-struct GLSimpleShape
+struct GLShape
 {
 	GLuint vertexArray;
 	GLuint vertexBuffer;
@@ -27,4 +27,9 @@ struct GLSimpleShape
 	GLenum primitiveType;
 
 	void Draw( );
+};
+
+struct GLColorShape : GLShapeIndexed
+{
+	GLuint colorBuffer;
 };

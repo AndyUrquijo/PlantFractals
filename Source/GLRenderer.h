@@ -25,10 +25,18 @@ class GLRenderer
 	Matrix44			projMatrix;
 	Matrix44			viewProjection;
 
-	GLObject			cubeObj;
+	GLShape		planeShape;
+	GLShader			generalShader;
 
 	GLText				text;
 	PlantSystem			plantSystem;
+
+	GLShader			testCompute;
+	GLShader			testDraw;
+	GLuint				testBuffer;
+	GLColorShape		testShape;
+	GLushort			testCols;
+	GLushort			testRows;
 
 	public:
 	virtual ~GLRenderer( ) {};
@@ -38,6 +46,8 @@ class GLRenderer
 	void Terminate( void );								// Called before context is destroyed
 	void Resize( GLsizei nWidth, GLsizei nHeight );		// Called when window is resized, at least once when window is created
 	void Render( void );								// Called to update OpenGL view
+
+	void UpdateText( );
 
 	inline static GLRenderer&	GetInstance( )					{ return instance; }
 	inline static GLShader&		GetShader( )					{ return *currShader; }

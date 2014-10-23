@@ -20,8 +20,7 @@ class GLObject
 	GLint				texture;	// Handle to the texture
 
 public:
-	GLShape				shape;
-//	GLShape& GetShape() { return shape; }
+	GLShapeIndexed		shape;
 
 	GLObject();
 

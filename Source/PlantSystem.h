@@ -14,12 +14,15 @@ class PlantSystem
 	
 	public:
 
-	std::vector<PlantVertex> vertexData;	
+	std::vector<PlantVertex> vertexData;
+	std::vector<int> parentIndexData;
+
 
 	GLuint	staticDataBuffer;
 	GLuint	dynamicDataBuffer;
 	GLuint	dataBufferSize;
 	
+	GLuint	parentIndexBuffer;
 
 	void Initialize( );
 	void Update( );

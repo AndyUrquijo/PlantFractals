@@ -134,6 +134,9 @@
     <Filter Include="Source\Plants">
       <UniqueIdentifier>{1a5813fd-841e-4458-aca9-6603ef2b99fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\test">
+      <UniqueIdentifier>{2f0348ce-561d-46c1-8c79-f636832febd1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Plant.fp">
@@ -159,6 +162,21 @@
     </None>
     <None Include="Shaders\Leaf.fp">
       <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Plain.fp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Plain.vp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Test.cp">
+      <Filter>Shaders\test</Filter>
+    </None>
+    <None Include="Shaders\Test.fp">
+      <Filter>Shaders\test</Filter>
+    </None>
+    <None Include="Shaders\Test.vp">
+      <Filter>Shaders\test</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -63,8 +63,8 @@ vec3 dNe[3];
 	vec3 r = (Re - Rs).xyz;
 
 	float wdt[2];
-	wdt[0] = (7.5 - vo_level[0])*0.1;
-	wdt[1] = (7.5 - vo_level[1])*0.1;
+	wdt[0] = 3.0*exp(-0.5*vo_level[0]);
+	wdt[1] = 3.0*exp(-0.5*vo_level[1]);
 
 
 

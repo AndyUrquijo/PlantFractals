@@ -23,6 +23,12 @@ layout(std140, binding = 1) buffer dynamicDataBuffer
 } dynamicData;
 
 
+layout(std140, binding = 2) buffer parentIndexBuffer
+{
+      uint indices[];
+} parentIndexData;
+
+
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
  
 vec3 rotate( vec3 v, float angle, const vec3 w )
@@ -31,12 +37,12 @@ vec3 rotate( vec3 v, float angle, const vec3 w )
 	return v*cos_a + cross(v,w )*sin_a + w*( dot(v,w) )*( 1 - cos_a );	// Rodriges rotation formula
 }
 
-const vec3 wind = vec3(-1,0,0)*0.3;
+const vec3 wind = vec3(-1,0,0)*0.4;
 
 void main()
 {
 	uint id = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y*100;
-	
+	uint parentId = parentIndexData.indices[id];
 	float level = staticData.vertices[id].level;
 	float delay = staticData.vertices[id].delay;
 	
@@ -49,7 +55,7 @@ void main()
 
 	float r = length(Ro);
 
-	float Wf = length(cross(Ro,wind))*level* (float(level>1.0));
+	float Wf = length(cross(Ro,wind))*(1 + level*int(level >0));
 	vec3 Wo = Ro + wind*sqrt(Wf) ; // equilibrium position with wind
 	Wo = normalize(Wo)*r;
 
@@ -71,4 +77,13 @@ void main()
 	dynamicData.vertices[id].normal= N;
 	dynamicData.vertices[id].level = level;
 	dynamicData.vertices[id].delay = delay;
+
+	
+	memoryBarrierBuffer();
+
+	vec3 Rp = staticData.vertices[parentId].position;
+	Rp *= int(parentId != id);
+	dynamicData.vertices[id].position = R + Rp;
+	
+
 }

@@ -17,8 +17,9 @@
 using Math::Vector3;
 
 
-#define LEAF_AMOUNT		5
+#define LEAF_AMOUNT		4
 #define LAST_LEVEL		7
+#define LEAF_LEVEL		LAST_LEVEL - 2
 #define BASE_LENGTH		10.0f
 #define APERTURE		0.18*PI
 #define LEAF_LENGTH		1.0f	
@@ -26,7 +27,7 @@ using Math::Vector3;
 
 
 /// Random ranges
-#define CHILD_AMOUNT		1,		5
+#define CHILD_AMOUNT		2,		4
 #define STRAIGHT_RATIO		0.8,	1.0
 #define TWIST_RATIO			0.5,	0.7
 #define DISTRIB_RATIO		0.0,	1.0
@@ -76,7 +77,7 @@ PlantVertex Plant::Transform( const PlantVertex& vertex, uint index, uint count,
 			Vector3 S = No.Rotate( theta, Ro.Normalize( ) ).Normalize( );
 			R = Ro.Rotate( phi, S ).Normalize( )*LEAF_LENGTH;
 			N = No.Rotate( phi, S ).Normalize( )*LEAF_WIDTH;
-			level =  RangeRand( 0, 1 );
+			level = RangeRand( 0, 1 )*(-1);
 
 		} } break;
 	}
@@ -117,9 +118,9 @@ void Plant::Create( )
 	uint nextLevelCount = comp.childCount;
 
 	uint lastLevelIndex = 0;
-	
+
 	//Create Branches
-	
+
 	for ( uint iComp = 1;; iComp++ )
 	{
 		if ( currLevelLeft == 0 ) // Reached next level in the tree
@@ -127,7 +128,7 @@ void Plant::Create( )
 			++level;
 			if ( level == LAST_LEVEL )
 				break;
-			else if( !lastLevelIndex && level == LAST_LEVEL - 1 )
+			else if ( !lastLevelIndex && level == LEAF_LEVEL )
 				lastLevelIndex = iComp;
 
 			currLevelLeft = nextLevelCount;
@@ -170,10 +171,11 @@ void Plant::Create( )
 	// --- Initialize tree data ---
 
 	system->vertexData.resize( bufferIndex + components.size( ) );
+	system->parentIndexData.resize( bufferIndex + components.size( ) );
 
 
-	system->vertexData[bufferIndex + 0] = { { 0, 0, 0 }, 0, { 1, 0, 0 }, 0 };
-	system->vertexData[bufferIndex + 1] = { { 0, BASE_LENGTH, 0 }, 1, { 1, 0, 0 }, 0 };
+	system->vertexData[bufferIndex + 0] = { { 0, 0, 0 }, 1, { 1, 0, 0 }, 0 };
+	system->vertexData[bufferIndex + 1] = { { 0, BASE_LENGTH, 0 }, 2, { 1, 0, 0 }, 0 };
 
 	for ( uint iV = 2; iV < components.size( ); iV++ )
 	{
@@ -189,13 +191,14 @@ void Plant::Create( )
 			type = BRANCH_FORK;
 
 		system->vertexData[bufferIndex + iV] = Transform( system->vertexData[bufferIndex + parent], childnumber, siblingCount, type );
+		system->parentIndexData[bufferIndex + iV] = parent;
 	}
 
 	// --- Initialize index buffer data ---
 
 	// branches data
 	{
-		GLShape& shape = branchesObject.shape;
+		GLShapeIndexed& shape = branchesObject.shape;
 		shape.indexCount = leavesIndex * 2;
 		shape.primitiveType = GL_LINES;
 
@@ -215,7 +218,7 @@ void Plant::Create( )
 
 	// leaves data
 	{
-		GLShape& shape = leavesObject.shape;
+		GLShapeIndexed& shape = leavesObject.shape;
 		shape.indexCount = ( bufferLength - leavesIndex ) * 3;
 		shape.primitiveType = GL_TRIANGLES;
 
@@ -248,9 +251,9 @@ void Plant::UpdateObject( PlantVertex* const vertices )
 
 	//PlantVertex* vertices = (PlantVertex*) glMapBufferRange( GL_ARRAY_BUFFER, bufferIndex*sizeof(PlantVertex), bufferLength*sizeof(PlantVertex), GL_READ_WRITE );
 
-	vertices[bufferIndex + 0].position =  location;
+	vertices[bufferIndex + 0].position = { 0, 0, 0 };
 	vertices[bufferIndex + 0].normal = { 1, 0, 0 };
-	vertices[bufferIndex + 0].level = 0;
+	vertices[bufferIndex + 0].level = 1;
 	vertices[bufferIndex + 0].delay = 0;
 
 	for ( uint iComp = 1; iComp < leavesIndex; iComp++ )
@@ -261,23 +264,29 @@ void Plant::UpdateObject( PlantVertex* const vertices )
 }
 
 
-
 void Plant::Draw( DrawType drawtype )
 {
-	glEnableVertexAttribArray( VERTEX_POSITION );
-	glEnableVertexAttribArray( VERTEX_NORMAL );
-	glVertexAttribPointer( VERTEX_POSITION, 4, GL_FLOAT, GL_FALSE, 32, 0 );
-	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 16 );
 
-	switch ( drawtype )
+
+	for ( size_t i = 0; i < locations.size( ); i++ )
 	{
-		case Plant::DRAW_BRANCHES:
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, branchesObject.shape.indexBuffer );
-		branchesObject.shape.Draw( );
-		break;
-		case Plant::DRAW_LEAVES:
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, leavesObject.shape.indexBuffer );
-		leavesObject.shape.Draw( );
-		break;
+
+		glUniform3f( GLRenderer::GetShader( ).GetUniform( DISPLACEMENT ), 
+					 locations[i].x,
+					 locations[i].y,
+					 locations[i].z);
+
+		switch ( drawtype )
+		{
+						 case Plant::DRAW_BRANCHES:
+						 glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, branchesObject.shape.indexBuffer );
+						 branchesObject.shape.Draw( );
+						 break;
+						 case Plant::DRAW_LEAVES:
+						 glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, leavesObject.shape.indexBuffer );
+						 leavesObject.shape.Draw( );
+						 break;
+		}
 	}
+
 }

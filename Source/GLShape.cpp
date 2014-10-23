@@ -1,12 +1,12 @@
 #include "GLShape.h"
 
-void GLShape::Draw( )
+void GLShapeIndexed::Draw( )
 {
 	glBindVertexArray( vertexArray );
 	glDrawElements( primitiveType, indexCount, GL_UNSIGNED_INT, 0 );
 }
 
-void GLSimpleShape::Draw( )
+void GLShape::Draw( )
 {
 	glBindVertexArray( vertexArray );
 	glDrawArrays( primitiveType, 0, vertexCount );

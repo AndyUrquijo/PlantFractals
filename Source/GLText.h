@@ -23,7 +23,7 @@ class GLText
 	char		widths[NUM_SYMBOLS];
 	GLuint		texture;
 
-	GLSimpleShape shape;
+	GLShape shape;
 	vector<Vector2> positions;
 	vector<Vector2> texCoords;
 

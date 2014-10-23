@@ -74,6 +74,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -125,6 +126,8 @@
   <ItemGroup>
     <None Include="Shaders\Leaf.fp" />
     <None Include="Shaders\Leaf.gp" />
+    <None Include="Shaders\Plain.fp" />
+    <None Include="Shaders\Plain.vp" />
     <None Include="Shaders\PlantUpdate.cp">
       <FileType>CppCode</FileType>
     </None>
@@ -171,6 +174,9 @@
     <None Include="Shaders\Plant.fp" />
     <None Include="Shaders\Plant.gp" />
     <None Include="Shaders\Plant.vp" />
+    <None Include="Shaders\Test.cp" />
+    <None Include="Shaders\Test.fp" />
+    <None Include="Shaders\Test.vp" />
     <None Include="Shaders\Text.fp" />
     <None Include="Shaders\Text.vp" />
   </ItemGroup>

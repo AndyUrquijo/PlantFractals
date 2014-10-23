@@ -1,0 +1,13 @@
+#version 110
+
+attribute vec3 _position;
+attribute vec4 _color;
+
+varying vec4 var_color;
+
+
+void main()
+{
+	gl_Position = vec4(_position,1);
+	var_color = _color;
+}

@@ -83,6 +83,7 @@ void GLText::UpdateText( )
 void GLText::DrawText( bool update )
 {
 	textShader.Use( );
+	glDisable( GL_DEPTH_TEST );
 	//glBlendFunc(GL_SRC_ALPHA,GL_SRC_ALPHA);
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	//glBlendFunc(GL_ONE, GL_SRC_ALPHA );
@@ -90,6 +91,8 @@ void GLText::DrawText( bool update )
 	glBindTexture( GL_TEXTURE_2D, texture );
 	if ( update ) UpdateText( );
 	shape.Draw( );
+	glEnable( GL_DEPTH_TEST );
+
 }
 
 
