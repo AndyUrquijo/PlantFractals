@@ -3,7 +3,6 @@
 *.suo
 /Debug
 /Release
-/Builds
 /ipch
 
 /x64
