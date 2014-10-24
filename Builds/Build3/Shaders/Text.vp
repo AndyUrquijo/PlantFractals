@@ -1,0 +1,13 @@
+#version 110
+
+attribute vec3 _position;
+attribute vec2 _texCoord;
+
+varying vec2 var_texCoord;
+
+
+void main()
+{
+	gl_Position = vec4(_position,1);
+	var_texCoord = _texCoord;
+}

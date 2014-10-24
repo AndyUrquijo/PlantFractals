@@ -1,0 +1,11 @@
+#version 110
+
+uniform mat4 WORLD;
+uniform mat4 VP;
+
+attribute vec3 _position;
+
+void main()
+{
+	gl_Position = WORLD*vec4(_position,1);
+}
