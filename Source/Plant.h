@@ -1,3 +1,7 @@
+/*
+.	Author:		Andres Urquijo
+.	Filename:	Plant.h
+*/
 #pragma once
 
 #include "GLObject.h"

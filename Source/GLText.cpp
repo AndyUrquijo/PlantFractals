@@ -179,8 +179,8 @@ GLShader GLText::textShader;
 void GLText::InitializeText( )
 {
 	textShader.CreateProgram( );
-	textShader.LoadShader( "Shaders/Text.vp", GL_VERTEX_SHADER );
-	textShader.LoadShader( "Shaders/Text.fp", GL_FRAGMENT_SHADER );
+	textShader.LoadShader( "Text.vp", GL_VERTEX_SHADER );
+	textShader.LoadShader( "Text.fp", GL_FRAGMENT_SHADER );
 	textShader.BindAttribute( VERTEX_POSITION, "_position" );
 	textShader.BindAttribute( VERTEX_TEXTURE, "_texCoord" );
 	textShader.CompileProgram( );

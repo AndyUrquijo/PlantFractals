@@ -131,6 +131,7 @@
     <None Include="Shaders\PlantUpdate.cp">
       <FileType>CppCode</FileType>
     </None>
+    <ClCompile Include="Source\GLUtil.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\Clock.cpp" />
     <ClCompile Include="Source\GLFactory.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="Source\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\GLUtil.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Clock.h" />
     <ClInclude Include="Source\GLFactory.h" />

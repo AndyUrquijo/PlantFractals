@@ -17,9 +17,11 @@ void GLShader::CreateProgram( )
 
 GLuint GLShader::LoadShader( PCSTR filePath, GLenum type )
 {
+	CHAR filePathFull[30] = "Shaders/";
+	strcat_s(filePathFull, sizeof filePathFull, filePath);
 	// Read source file
 
-	ifstream ifs( filePath, ios_base::in | ios_base::binary );
+	ifstream ifs( filePathFull, ios_base::in | ios_base::binary );
 	if ( !ifs.is_open( ) ) WinApp::ShowErrorMessage( L"Could not open the shader file" );
 
 	ifs.seekg( 0, std::ios::end );

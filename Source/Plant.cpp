@@ -1,3 +1,7 @@
+/*
+.	Author:		Andres Urquijo
+.	Filename:	Plant.cpp	
+*/
 #include "Plant.h"
 
 #include "GLFactory.h"
@@ -21,17 +25,17 @@ using Math::Vector3;
 #define LAST_LEVEL		7
 #define LEAF_LEVEL		LAST_LEVEL - 2
 #define BASE_LENGTH		10.0f
-#define APERTURE		0.18*PI
+#define APERTURE		0.18f*PI
 #define LEAF_LENGTH		1.0f	
 #define LEAF_WIDTH		0.4f	
 
 
 /// Random ranges
 #define CHILD_AMOUNT		2,		4
-#define STRAIGHT_RATIO		0.8,	1.0
-#define TWIST_RATIO			0.5,	0.7
-#define DISTRIB_RATIO		0.0,	1.0
-#define APERTURE_RATIO		0.8,	1.2
+#define STRAIGHT_RATIO		0.8f,	1.0f
+#define TWIST_RATIO			0.5f,	0.7f
+#define DISTRIB_RATIO		0.0f,	1.0f
+#define APERTURE_RATIO		0.8f,	1.2f
 
 PlantSystem* Plant::system;
 
@@ -109,7 +113,7 @@ void Plant::Create( )
 
 	comp.parentIndex = 0;
 	comp.firstChildIndex = 2;
-	comp.childCount = floorf( RangeRand( CHILD_AMOUNT ) + 0.5f );
+	comp.childCount = (GLushort)floorf( RangeRand( CHILD_AMOUNT ) + 0.5f );
 	components.push_back( comp );
 
 	comp = { };
@@ -136,7 +140,7 @@ void Plant::Create( )
 		}
 
 		components[iComp].firstChildIndex = (int) components.size( );
-		components[iComp].childCount = floorf( RangeRand( CHILD_AMOUNT ) + 0.5f );
+		components[iComp].childCount = (GLushort)floorf( RangeRand( CHILD_AMOUNT ) + 0.5f );
 
 
 		nextLevelCount += components[iComp].childCount;
@@ -150,7 +154,7 @@ void Plant::Create( )
 	}
 	//end of branch creation
 
-	leavesIndex = components.size( );
+	leavesIndex = (uint)components.size( );
 
 	// Add leaves as children of the modes on latest level
 	for ( uint iComp = lastLevelIndex; iComp < leavesIndex; iComp++ )

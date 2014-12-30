@@ -15,16 +15,16 @@ void Clock::Start() {
 	QueryPerformanceCounter((LARGE_INTEGER *)&start);
 }
 
-double Clock::Watch() const {
+float Clock::Watch() const {
 	long long finish;
 	QueryPerformanceCounter((LARGE_INTEGER *)&finish);
-	return (finish - start) / double(freq);
+	return float((finish - start) / double(freq));
 }
 
-double Clock::Tick() {
+float Clock::Tick() {
 	long long finish;
 	QueryPerformanceCounter((LARGE_INTEGER *)&finish);
 	double time = (finish - start) / double(freq);
 	start = finish;
-	return time;
+	return float(time);
 }

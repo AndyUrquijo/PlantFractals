@@ -12,8 +12,8 @@ public:
 	//Starts/Restarts the timer
 	void Start();
 	//Returns the elapsed time and resets the timer
-	double Tick();
+	float Tick();
 	//Returns the elapsed time without affecting the timer
-	double Watch() const;
+	float Watch() const;
 };
 

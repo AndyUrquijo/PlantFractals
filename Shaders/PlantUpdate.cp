@@ -22,8 +22,13 @@ layout(std140, binding = 1) buffer dynamicDataBuffer
       PlantVertex vertices[];
 } dynamicData;
 
+layout(std140, binding = 2) buffer translatedDataBuffer
+{
+      PlantVertex vertices[];
+} translatedData;
 
-layout(std140, binding = 2) buffer parentIndexBuffer
+
+layout(std140, binding = 3) buffer parentIndexBuffer
 {
       uint indices[];
 } parentIndexData;
@@ -86,4 +91,11 @@ void main()
 	dynamicData.vertices[id].position = R + Rp;
 	
 
+	
+	translatedData.vertices[id] = dynamicData.vertices[id];
+
+	if( parentId != 0 )
+		translatedData.vertices[id].position += translatedData.vertices[parentId].position;
+	else
+		translatedData.vertices[id].position = vec3(0,0,0);
 }

@@ -55,6 +55,9 @@
     <ClCompile Include="Source\PlantSystem.cpp">
       <Filter>Source\Plants</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GLUtil.cpp">
+      <Filter>Source\Graphics Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\MatrixStack.h">
@@ -110,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="Source\PlantSystem.h">
       <Filter>Source\Plants</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GLUtil.h">
+      <Filter>Source\Graphics Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

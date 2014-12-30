@@ -1,3 +1,7 @@
+/*
+.	Author:		Andres Urquijo
+.	Filename:	PlantSystem.h
+*/
 #pragma once
 
 #include "Plant.h"
@@ -20,6 +24,7 @@ class PlantSystem
 
 	GLuint	staticDataBuffer;
 	GLuint	dynamicDataBuffer;
+	GLuint	translatedDataBuffer;
 	GLuint	dataBufferSize;
 	
 	GLuint	parentIndexBuffer;
@@ -28,5 +33,10 @@ class PlantSystem
 	void Update( );
 	void Render();
 
+	private:
+
+	void InitializeShaders();
+	void InitializePlants();
+	void InitializeBuffers();
 };
 

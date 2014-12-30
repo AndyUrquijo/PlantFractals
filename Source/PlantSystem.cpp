@@ -1,3 +1,7 @@
+/*
+.	Author:		Andres Urquijo
+.	Filename:	PlantSystem.cpp
+*/
 #include "PlantSystem.h"
 #include "Clock.h"
 #include "GLRenderer.h"
@@ -17,12 +21,21 @@ using std::string;
 void PlantSystem::Initialize( )
 {
 
-	// Intialize Shaders
+	Plant::system = this;
+	timeVal = 0.0f;
 
+	InitializeShaders();
+	InitializePlants();
+	InitializeBuffers();
+
+}
+
+void PlantSystem::InitializeShaders()
+{
 	drawShader.CreateProgram( );
-	drawShader.LoadShader( "Shaders/Plant.vp", GL_VERTEX_SHADER );
-	drawShader.LoadShader( "Shaders/Plant.gp", GL_GEOMETRY_SHADER );
-	drawShader.LoadShader( "Shaders/Plant.fp", GL_FRAGMENT_SHADER );
+	drawShader.LoadShader( "Plant.vp", GL_VERTEX_SHADER );
+	drawShader.LoadShader( "Plant.gp", GL_GEOMETRY_SHADER );
+	drawShader.LoadShader( "Plant.fp", GL_FRAGMENT_SHADER );
 	drawShader.BindAttribute( VERTEX_POSITION, "_position" );
 	drawShader.BindAttribute( VERTEX_NORMAL, "_normal" );
 	drawShader.CompileProgram( );
@@ -30,9 +43,9 @@ void PlantSystem::Initialize( )
 	drawShader.ObtainUniform( DISPLACEMENT, "DISPLACEMENT" );
 
 	drawLeavesShader.CreateProgram( );
-	drawLeavesShader.LoadShader( "Shaders/Plant.vp", GL_VERTEX_SHADER );
-	drawLeavesShader.LoadShader( "Shaders/Leaf.gp", GL_GEOMETRY_SHADER );
-	drawLeavesShader.LoadShader( "Shaders/Leaf.fp", GL_FRAGMENT_SHADER );
+	drawLeavesShader.LoadShader( "Plant.vp", GL_VERTEX_SHADER );
+	drawLeavesShader.LoadShader( "Leaf.gp", GL_GEOMETRY_SHADER );
+	drawLeavesShader.LoadShader( "Leaf.fp", GL_FRAGMENT_SHADER );
 	drawLeavesShader.BindAttribute( VERTEX_POSITION, "_position" );
 	drawLeavesShader.BindAttribute( VERTEX_NORMAL, "_normal" );
 	drawLeavesShader.CompileProgram( );
@@ -40,12 +53,13 @@ void PlantSystem::Initialize( )
 	drawLeavesShader.ObtainUniform( DISPLACEMENT, "DISPLACEMENT" );
 
 	updateShader.CreateProgram( );
-	updateShader.LoadShader( "Shaders/PlantUpdate.cp", GL_COMPUTE_SHADER );
+	updateShader.LoadShader( "PlantUpdate.cp", GL_COMPUTE_SHADER );
 	updateShader.CompileProgram( );
 	updateShader.ObtainUniform( TIME, "TIME" );
+}
 
-	Plant::system = this;
-
+void PlantSystem::InitializePlants()
+{
 	srand( 100 );
 	plantArray.resize( PLANT_AMOUNT );
 	dataBufferSize = 0;
@@ -92,39 +106,24 @@ void PlantSystem::Initialize( )
 		dataBufferSize += plantArray[iPl].bufferLength;
 	}
 
+}
 
-	// Initialize GPU vertex data
-
+void PlantSystem::InitializeBuffers()
+{
+	
 	staticDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * dataBufferSize );
+	UpdateGLBuffer((PlantVertex*)&vertexData[0], dataBufferSize, GL_SHADER_STORAGE_BUFFER);
+	
 	dynamicDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * dataBufferSize );
-
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
-
-	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
-	if ( !vertices ) return WinApp::ShowErrorMessage( L"Couldn't read the static data buffer" );
-
-	memcpy( vertices, &vertexData[0], dataBufferSize*sizeof( PlantVertex ) );
-
-	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
-
-	// Initialize GPU parent index data
+	ZeroGLBuffer( sizeof(PlantVertex) * dataBufferSize, GL_SHADER_STORAGE_BUFFER);
+	
+	translatedDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * dataBufferSize );
+	ZeroGLBuffer( sizeof(PlantVertex) * dataBufferSize, GL_SHADER_STORAGE_BUFFER);
 
 	parentIndexBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(UINT) * dataBufferSize );
-
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, parentIndexBuffer );
-
-	PlantVertex* indices = (PlantVertex*) glMapBuffer( GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE );
-	if ( !indices ) return WinApp::ShowErrorMessage( L"Couldn't read the parent index data buffer" );
-
-	memcpy( indices, &parentIndexData[0], dataBufferSize*sizeof( UINT ) );
-
-	glUnmapBuffer( GL_SHADER_STORAGE_BUFFER );
-
-
-
-	timeVal = 0.0f;
-
+	UpdateGLBuffer(&parentIndexData[0], dataBufferSize, GL_SHADER_STORAGE_BUFFER);
 }
+
 
 void PlantSystem::Update( )
 {
@@ -136,7 +135,8 @@ void PlantSystem::Update( )
 
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, staticDataBuffer );
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, dynamicDataBuffer );
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, parentIndexBuffer );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, translatedDataBuffer );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 3, parentIndexBuffer );
 
 	glDispatchCompute( 100, dataBufferSize / 100 + 1, 1 );
 	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
@@ -144,12 +144,13 @@ void PlantSystem::Update( )
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, 0 );
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, 0 );
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, 0 );
+	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 3, 0 );
 
 
 	
 	// Translate positions along the hiearchy
 	glBindBuffer( GL_ARRAY_BUFFER, dynamicDataBuffer );
-	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
+	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_WRITE_ONLY );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
 		plantArray[i].UpdateObject( vertices );

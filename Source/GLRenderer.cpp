@@ -19,7 +19,6 @@
 GLRenderer GLRenderer::instance;
 GLShader* GLRenderer::currShader;
 
-//#define COMPUTE_TEST
 
 void GLRenderer::Initialize( void )
 {
@@ -40,24 +39,12 @@ void GLRenderer::Initialize( void )
 
 
 	generalShader.CreateProgram( );
-	generalShader.LoadShader( "Shaders/Plain.vp", GL_VERTEX_SHADER );
-	generalShader.LoadShader( "Shaders/Plain.fp", GL_FRAGMENT_SHADER );
+	generalShader.LoadShader( "Plain.vp", GL_VERTEX_SHADER );
+	generalShader.LoadShader( "Plain.fp", GL_FRAGMENT_SHADER );
 	generalShader.BindAttribute( VERTEX_POSITION, "_position" );
 	generalShader.CompileProgram( );
 	generalShader.ObtainUniform( VP, "VP" );
 
-#ifdef COMPUTE_TEST
-	testCompute.CreateProgram( );
-	testCompute.LoadShader( "Shaders/Test.cp", GL_COMPUTE_SHADER );
-	testCompute.CompileProgram( );
-
-	testDraw.CreateProgram( );
-	testDraw.LoadShader( "Shaders/Test.vp", GL_VERTEX_SHADER );
-	testDraw.LoadShader( "Shaders/Test.fp", GL_FRAGMENT_SHADER );
-	testDraw.BindAttribute( VERTEX_POSITION, "_position" );
-	testDraw.BindAttribute( VERTEX_COLOR, "_color" );
-	testDraw.CompileProgram( );
-#endif
 	/* //Simulate work
 	for ( size_t i = 0; i < 3; i++ )
 	( new std::thread( []{ while ( true ); } ) )->detach( );
@@ -73,27 +60,6 @@ void GLRenderer::InitializeObjects( void )
 	GLGeometry::QUAD_DESC quadDesc = { { 500, 500 } };
 	planeShape = GLGeometry::MakeQuad( quadDesc );
 
-#ifdef COMPUTE_TEST
-	testCols = 30;
-	testRows = 30;
-	
-	GLGeometry::PLANE_GRID_DESC planeGridDesc;
-	planeGridDesc.layers = { (float) testCols, (float) testRows };
-	planeGridDesc.size = { 2, 2 };
-	planeGridDesc.center = { 0, 0, 0 };
-
-	testShape = GLGeometry::MakePlaneGrid( planeGridDesc );
-	testBuffer = testShape.vertexBuffer;
-
-	glBindBuffer(GL_ARRAY_BUFFER, testShape.colorBuffer );
-
-	Vector4* colors = (Vector4*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
-	if ( !colors ) return WinApp::ShowErrorMessage( L"Couldn't read the test buffer" );
-		
-	colors[(testCols+1) / 2 + (testCols+1)*((testRows+1) / 2)] = { 1, 1, 1, 1 };
-
-	glUnmapBuffer( GL_ARRAY_BUFFER );
-#endif
 }
 
 void GLRenderer::Terminate( void )
@@ -146,29 +112,10 @@ void GLRenderer::Render( void )
 	glClear( GL_DEPTH_BUFFER_BIT );
 
 
-	#ifdef COMPUTE_TEST
-	
-	testCompute.Use( );
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, testShape.colorBuffer );
-
-	glDispatchCompute( testCols+1, testRows+1, 1 );
-	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
-
-	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, 0 );
-	
-
-	glDisable( GL_DEPTH_TEST );
-	testDraw.Use();
-	testShape.Draw( );
-
-	//Sleep(800);
-
-#else
 	
 	plantSystem.Update( );
 	plantSystem.Render( );
 	
-
 	
 	generalShader.Use( );
 	glBindBuffer( GL_ARRAY_BUFFER, planeShape.vertexBuffer );
@@ -176,7 +123,6 @@ void GLRenderer::Render( void )
 	glUniformMatrix4fv( generalShader.GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
 	planeShape.Draw( );
 	
-#endif
 
 	text.DrawText( );
 
@@ -219,3 +165,5 @@ void GLRenderer::UpdateText( )
 	ss << "Camera Ang: (" << camera.orientation.x*( 180 / 3.14f ) << ", " << camera.orientation.y*( 180 / 3.14f ) << ", " << camera.orientation.z*( 180 / 3.14f ) << ")";
 	text.AddText( ss.str( ), { -0.95f, +0.80f } );
 }
+
+
