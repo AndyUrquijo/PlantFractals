@@ -1,5 +1,5 @@
 //Plant.gp
-#version 110
+#version 430
 
 //#define LINE_TEST
 
@@ -14,8 +14,8 @@ layout (triangle_strip, max_vertices=8) out;
 #endif
 
 in float vo_level[];
-in float vo_delay[];
 in vec3 vo_normal[];
+in float vo_delay[];
 
 out vec3 go_normal;
 out vec3 go_color;
@@ -23,8 +23,22 @@ out vec3 go_color;
 vec4 corners[6];
 
 
-const vec3 colorA = vec3(0.20, 0.15, 0.00); // start
-const vec3 colorB = vec3(0.15, 0.30, 0.00); // end
+//const vec3 colorA = vec3(0.20, 0.15, 0.00); // start
+//const vec3 colorB = vec3(0.15, 0.30, 0.00); // end
+
+const vec3 colorA = vec3(1,0,0); // start
+const vec3 colorB = vec3(0,1,0); // end
+
+uniform vec3 colorArray[7] =
+vec3[7](
+ vec3(0,0,0),
+ vec3(1,0,0),
+ vec3(0,1,0),
+ vec3(0,0,1),
+ vec3(1,1,0),
+ vec3(1,0,1),
+ vec3(0,1,1)
+);
 
 #define PI 3.1415926535897932384626433832795
 
@@ -63,8 +77,8 @@ vec3 dNe[3];
 	vec3 r = (Re - Rs).xyz;
 
 	float wdt[2];
-	wdt[0] = 3.0*exp(-0.5*vo_level[0]);
-	wdt[1] = 3.0*exp(-0.5*vo_level[1]);
+	wdt[0] = 8.0*exp(-2.5*vo_level[0]);
+	wdt[1] = 8.0*exp(-2.5*vo_level[1]);
 
 
 
@@ -73,11 +87,11 @@ vec3 dNe[3];
 
 	vec3 ru = normalize(r);
 	
-	dNs[0] = normalize(Ns);
+	dNs[0] = normalize(Ns.xyz);
 	dNs[1] = Rotate(dNs[0], PI*2/3, ru);
 	dNs[2] = Rotate(dNs[0], -PI*2/3, ru);
 
-	dNe[0] = normalize(Ne);
+	dNe[0] = normalize(Ne.xyz);
 	dNe[1] = Rotate(dNe[0], PI*2/3, ru);
 	dNe[2] = Rotate(dNe[0], -PI*2/3, ru);
 
@@ -100,9 +114,11 @@ vec3 dNe[3];
 	//	return;
 
 
-	vec3 colorStart = mix( colorA, colorB, vo_level[0] /7);
-	vec3 colorEnd = mix( colorA, colorB, vo_level[1] /7);
-
+	//vec3 colorStart = mix( colorA, colorB, vo_level[0] /7);
+	//vec3 colorEnd = mix( colorA, colorB, vo_level[1] /7);
+	int level = int(vo_level[0]);
+	vec3 colorStart =	colorArray[level + 1].xyz;
+	vec3 colorEnd =		colorArray[level + 1].xyz;
 
 #ifdef LINE_TEST
 	go_color = colorStart;

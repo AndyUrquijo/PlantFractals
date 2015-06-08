@@ -7,9 +7,7 @@
 #ifndef GLEW_STATIC
 #define GLEW_STATIC
 #endif
-#pragma comment(lib, "Release/x64/glew32.lib")
-#pragma comment(lib, "opengl32.lib")
-
+#pragma comment(lib,"GL/glew32.lib")
 LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
 	switch ( message )

@@ -16,6 +16,7 @@ layout (triangle_strip, max_vertices=8) out;
 in float vo_level[];
 in float vo_delay[];
 in vec3 vo_normal[];
+
 out vec3 go_normal;
 out vec3 go_color;
 

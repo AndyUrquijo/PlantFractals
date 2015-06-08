@@ -11,9 +11,9 @@
 using std::string;
 #include "WinApp.h"
 
-#define PLANT_AMOUNT 5
-#define COPY_AMOUNT 5
-#define FOREST_AREA 10
+#define PLANT_AMOUNT 10
+#define COPY_AMOUNT 15
+#define FOREST_AREA 20
 
 #define PLANT_SEPARATION 15
 #define CLONE_SEPARATION PLANT_SEPARATION*1
@@ -37,7 +37,9 @@ void PlantSystem::InitializeShaders()
 	drawShader.LoadShader( "Plant.gp", GL_GEOMETRY_SHADER );
 	drawShader.LoadShader( "Plant.fp", GL_FRAGMENT_SHADER );
 	drawShader.BindAttribute( VERTEX_POSITION, "_position" );
+	drawShader.BindAttribute( VERTEX_LEVEL, "_level" );
 	drawShader.BindAttribute( VERTEX_NORMAL, "_normal" );
+	drawShader.BindAttribute( VERTEX_DELAY, "_delay" );
 	drawShader.CompileProgram( );
 	drawShader.ObtainUniform( VP, "VP" );
 	drawShader.ObtainUniform( DISPLACEMENT, "DISPLACEMENT" );
@@ -47,7 +49,9 @@ void PlantSystem::InitializeShaders()
 	drawLeavesShader.LoadShader( "Leaf.gp", GL_GEOMETRY_SHADER );
 	drawLeavesShader.LoadShader( "Leaf.fp", GL_FRAGMENT_SHADER );
 	drawLeavesShader.BindAttribute( VERTEX_POSITION, "_position" );
+	drawLeavesShader.BindAttribute( VERTEX_LEVEL, "_level" );
 	drawLeavesShader.BindAttribute( VERTEX_NORMAL, "_normal" );
+	drawLeavesShader.BindAttribute( VERTEX_DELAY, "_delay" );	
 	drawLeavesShader.CompileProgram( );
 	drawLeavesShader.ObtainUniform( VP, "VP" );
 	drawLeavesShader.ObtainUniform( DISPLACEMENT, "DISPLACEMENT" );
@@ -110,7 +114,6 @@ void PlantSystem::InitializePlants()
 
 void PlantSystem::InitializeBuffers()
 {
-	
 	staticDataBuffer = GLFactory::CreateShaderStorageBuffer( NULL, sizeof(PlantVertex) * dataBufferSize );
 	UpdateGLBuffer((PlantVertex*)&vertexData[0], dataBufferSize, GL_SHADER_STORAGE_BUFFER);
 	
@@ -147,40 +150,62 @@ void PlantSystem::Update( )
 	glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 3, 0 );
 
 
-	
+#if 1 // CPU translations
 	// Translate positions along the hiearchy
+	
+	
 	glBindBuffer( GL_ARRAY_BUFFER, dynamicDataBuffer );
-	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_WRITE_ONLY );
+	PlantVertex* vertices = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
 		plantArray[i].UpdateObject( vertices );
-
+	
 	glUnmapBuffer( GL_ARRAY_BUFFER );
 	glBindBuffer( GL_ARRAY_BUFFER, NULL );
-	
+#endif
 }
 
 
+
+void SetAttribute( GLVertexAttribute attribute, GLuint size, GLuint stride, GLuint offset )
+{
+	glEnableVertexAttribArray( attribute );
+	glVertexAttribPointer( attribute, size, GL_FLOAT, GL_FALSE, stride*4, (void*)(offset*4) );
+}
+
 void PlantSystem::Render( )
 {
+	/*
+	glBindBuffer( GL_ARRAY_BUFFER, parentIndexBuffer );
+	UINT* indices = (UINT*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
+	glUnmapBuffer( GL_ARRAY_BUFFER );
+
+
+	glBindBuffer( GL_ARRAY_BUFFER, translatedDataBuffer );
+	PlantVertex* translated = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
+	glUnmapBuffer( GL_ARRAY_BUFFER );
+	*/
+	glBindBuffer( GL_ARRAY_BUFFER, dynamicDataBuffer );
+	PlantVertex* dynamic = (PlantVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE );
+	glUnmapBuffer( GL_ARRAY_BUFFER );
+	
+
+	drawShader.Use( );
 
 	glBindBuffer( GL_ARRAY_BUFFER, dynamicDataBuffer );
 
-	glEnableVertexAttribArray( VERTEX_POSITION );
-	glEnableVertexAttribArray( VERTEX_NORMAL );
-	glVertexAttribPointer( VERTEX_POSITION, 4, GL_FLOAT, GL_FALSE, 32, 0 );
-	glVertexAttribPointer( VERTEX_NORMAL, 4, GL_FLOAT, GL_FALSE, 32, (void*) 16 );
+	SetAttribute(VERTEX_POSITION,	3, 8, 0);
+	SetAttribute(VERTEX_LEVEL,		1, 8, 3);
+	SetAttribute(VERTEX_NORMAL,		3, 8, 4);
+	SetAttribute(VERTEX_DELAY,		1, 8, 7);
 
-
-
-	drawShader.Use( );
 	glLineWidth( 4.0f );
 	glUniformMatrix4fv( drawShader.GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
 		plantArray[i].Draw( Plant::DRAW_BRANCHES );
 
-	
+	/*
 
 	drawLeavesShader.Use( );
 	glLineWidth( 8.0f );
@@ -189,7 +214,7 @@ void PlantSystem::Render( )
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
 		plantArray[i].Draw( Plant::DRAW_LEAVES );
 
-	
+	*/
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
 }

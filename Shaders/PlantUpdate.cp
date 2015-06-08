@@ -56,7 +56,7 @@ void main()
 	vec3 R;
 	vec3 N;
 
-
+	// Movement Simulation
 
 	float r = length(Ro);
 
@@ -78,24 +78,19 @@ void main()
 	float ar = acos( dot(Ro,R) / ( r*r ) );
 	N = rotate(No, a, pr);
 	
-	dynamicData.vertices[id].position = R;
-	dynamicData.vertices[id].normal= N;
+	dynamicData.vertices[id].position = Ro;
+	dynamicData.vertices[id].normal = N;
 	dynamicData.vertices[id].level = level;
 	dynamicData.vertices[id].delay = delay;
 
 	
-	memoryBarrierBuffer();
-
+	memoryBarrierBuffer();	// Hold until all simulation is done.
+	
 	vec3 Rp = staticData.vertices[parentId].position;
+	
 	Rp *= int(parentId != id);
 	dynamicData.vertices[id].position = R + Rp;
 	
-
 	
-	translatedData.vertices[id] = dynamicData.vertices[id];
-
-	if( parentId != 0 )
-		translatedData.vertices[id].position += translatedData.vertices[parentId].position;
-	else
-		translatedData.vertices[id].position = vec3(0,0,0);
+	
 }

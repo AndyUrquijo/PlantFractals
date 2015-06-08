@@ -2,9 +2,19 @@
 
 uniform mat4 VP;
 
-attribute vec3 _position;
+in vec3  _position;
+in float _level;
+in vec3	 _normal;
+in float _delay;
+
+out float vo_level;
+out vec3  vo_normal;
+out float vo_delay;
 
 void main()
 {
 	gl_Position = VP*vec4(_position,1);
+	vo_level = _level;
+	vo_normal = _normal;
+	vo_delay = _delay;
 }
