@@ -67,10 +67,10 @@ void PlantSystem::InitializePlants()
 	srand( 100 );
 	plantArray.resize( PLANT_AMOUNT );
 	dataBufferSize = 0;
-	for ( int iPl = 0; iPl < plantArray.size( ); iPl++ )
+	for ( size_t iPl = 0; iPl < plantArray.size( ); iPl++ )
 		plantArray[iPl].locations.resize( COPY_AMOUNT );
 
-	for ( int iPl = 0; iPl < plantArray.size( ); iPl++ )
+	for ( size_t iPl = 0; iPl < plantArray.size( ); iPl++ )
 	{
 
 		for ( size_t iLc = 0; iLc < plantArray[iPl].locations.size( ); iLc++ )
@@ -78,7 +78,7 @@ void PlantSystem::InitializePlants()
 			plantArray[iPl].locations[iLc] = Vector3::Randomize( { -10, 10 }, { 0, 0 }, { -10, 10 } ) * FOREST_AREA;
 
 			bool tooClose = false;
-			for ( int jPl = 0; jPl <= iPl; jPl++ )
+			for ( size_t jPl = 0; jPl <= iPl; jPl++ )
 			{
 				size_t boundLc = plantArray[jPl].locations.size( );
 				float minDistance = PLANT_SEPARATION;

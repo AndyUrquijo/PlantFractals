@@ -87,8 +87,8 @@ GLShape GLGeometry::MakeQuad( QUAD_DESC& description )
 
 GLColorShape GLGeometry::MakePlaneGrid( PLANE_GRID_DESC description )
 {
-	uint numCols = description.layers.x + 1;
-	uint numRows = description.layers.y + 1;
+	uint numCols = (uint)description.layers.x + 1;
+	uint numRows = (uint)description.layers.y + 1;
 	Vector2 cellSize = { description.size.x / description.layers.x, description.size.y / description.layers.y };
 
 	Vector3 startPoint = description.center - Vector3(description.size.x,description.size.y,0)*0.5f;
