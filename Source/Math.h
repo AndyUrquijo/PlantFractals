@@ -69,11 +69,14 @@ namespace Math
 		//The vector's Magnitude squared.
 		float LengthSq( ) const		{ return x*x + y*y; }
 
+		Vector2 Normalize( ) const		{ return *this*( 1.0f / Length( ) ); }
+
+
 		//Element by element multiplication
 		Vector2 ElementMultiply( const Vector2& vector ) const	{ return Vector2( x*vector.x, y*vector.y ); }
 		Vector2 ElementMultiply( float x, float y ) const			{ return Vector2( this->x*x, this->y*y ); }
 
-		bool IsZero( float eps = 0.0f ) const		{ return fabsf( x ) <= eps && fabsf( x ) <= eps; }
+		bool IsZero( float eps = 0.0f ) const		{ return fabsf( x ) <= eps && fabsf( y ) <= eps; }
 
 		// Constructs a unit vector with an angle in polar coordinates.
 		static Vector2 UnitVector( float theta );
@@ -277,7 +280,7 @@ namespace Math
 		Matrix44& operator*=( const Matrix44& matrix );
 
 		Matrix44 Transpose( ) const;
-		Matrix44 Inverse( ) const;
+		Matrix44 Inverse( ) const; // NOTE: Function not yet functional
 
 		static Matrix44 MakeIdentity( );
 		static Matrix44 MakeZeros( );

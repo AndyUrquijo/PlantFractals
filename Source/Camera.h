@@ -4,12 +4,12 @@
 
 class Camera 
 {
+	Math::Matrix44 worldMatrix;
+	
 	public:
-	Math::Vector3 orientation;
-	Math::Vector3 position;
 	
 	Math::Vector3 velocity;
-	Math::Vector3 angularVelocity;
+	Math::Vector2 angularVelocity; // (yaw,pitch)
 
 
 	Camera();
@@ -18,6 +18,7 @@ class Camera
 
 	Math::Matrix44 MakeViewMatrix( ) const;
 
+	Math::Vector3 GetPosition() const;
 	Math::Vector3 GetForward() const;
 };
 

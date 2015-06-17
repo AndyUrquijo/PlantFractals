@@ -271,7 +271,7 @@ void Plant::UpdateObject( PlantVertex* const vertices )
 void Plant::Draw( DrawType drawtype )
 {
 
-
+	
 	for ( size_t i = 0; i < locations.size( ); i++ )
 	{
 

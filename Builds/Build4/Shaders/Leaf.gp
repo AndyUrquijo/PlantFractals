@@ -111,13 +111,13 @@ void main()
 	gl_Position = corners[3];
 	EmitVertex();
 
-	go_color = colorLeafA;
+	//go_color = colorLeafA;
 	gl_Position = corners[0];
 	EmitVertex();
 	gl_Position = corners[1];
 	EmitVertex();
 
-	go_color = colorLeafB;
+	//go_color = colorLeafB;
 	gl_Position = corners[2];
 	EmitVertex();
 

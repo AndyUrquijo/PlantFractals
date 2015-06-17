@@ -56,6 +56,7 @@ class GLRenderer
 	inline static Matrix44&		GetProjectionMatrix( )			{ return instance.projMatrix; }
 	inline static Matrix44&		GetViewProjectionMatrix( )		{ return instance.viewProjection; }
 	inline static MatrixStack&	GetMatrixStack( )				{ return instance.matrixStack; }
+	inline static Vector3		GetCameraPos( )					{ return instance.camera.GetPosition(); }
 
 	inline static void			SetShader( GLShader* shader )	{ currShader = shader; }
 

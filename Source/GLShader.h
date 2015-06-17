@@ -3,7 +3,7 @@
 #include "GLSharedTypes.h"
 
 
-enum Uniform { WORLD, VP, TIME, DISPLACEMENT, NUM_UNIFORMS };
+enum Uniform { WORLD, VP, TIME, DISPLACEMENT, CAMERA_POS, NUM_UNIFORMS };
 
 //Wrapper class for Shader loading functions
 class GLShader

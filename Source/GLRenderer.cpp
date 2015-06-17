@@ -24,11 +24,9 @@ void GLRenderer::Initialize( void )
 {
 	glewInit( );
 
-	glClearColor( 0.7f, 0.7f, 0.7f, 1.0f );
-	//glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+	//glClearColor( 0.7f, 0.7f, 0.7f, 1.0f );
+	glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
 
-
-	camera.position = { 0, -15, 30 };
 
 	InitializeObjects( );
 
@@ -120,7 +118,7 @@ void GLRenderer::Render( void )
 	generalShader.Use( );
 	glBindBuffer( GL_ARRAY_BUFFER, planeShape.vertexBuffer );
 	glVertexAttribPointer( VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, 0, 0 );
-	glUniformMatrix4fv( generalShader.GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
+	glUniformMatrix4fv( GetShader( ).GetUniform( VP ), 1, GL_FALSE, viewProjection.elm );
 	planeShape.Draw( );
 	
 
@@ -153,16 +151,18 @@ void GLRenderer::UpdateText( )
 	ss << L"FPS: " << fps;
 	text.AddText( ss.str( ), { -0.95f, +0.95f } );
 
+	const Vector3 camPos = camera.GetPosition(); 
 	ss.str( L"" );
-	ss << "Camera Pos: (" << camera.position.x << ", " << camera.position.y << ", " << camera.position.z << ")";
+	ss << "Camera Pos: (" << camPos.x << ", " << camPos.y << ", " << camPos.z << ")";
 	text.AddText( ss.str( ), { -0.95f, +0.90f } );
 
 	ss.str( L"" );
 	ss << "Camera Vel: (" << camera.velocity.x << ", " << camera.velocity.y << ", " << camera.velocity.z << ")";
 	text.AddText( ss.str( ), { -0.95f, +0.85f } );
 
+	const Vector3 camFwd = camera.GetForward(); 
 	ss.str( L"" );
-	ss << "Camera Ang: (" << camera.orientation.x*( 180 / 3.14f ) << ", " << camera.orientation.y*( 180 / 3.14f ) << ", " << camera.orientation.z*( 180 / 3.14f ) << ")";
+	ss << "Camera Fwd: (" << camFwd.x << ", " << camFwd.y << ", " << camFwd.z << ")";
 	text.AddText( ss.str( ), { -0.95f, +0.80f } );
 }
 

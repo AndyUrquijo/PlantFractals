@@ -389,13 +389,60 @@ namespace Math
 		return transpose;
 	}
 
-	//Matrix44 Matrix44::Inverse( ) const
-	//{
-	//	Matrix44 inverse;
-	//	m3dInvertMatrix44( inverse.elm, this->elm );
-	//	return inverse;
-	//}
 
+
+
+float invf(int i,int j,const Matrix44& mat)
+{
+
+    int o = 2+(j-i);
+
+    i += 4+o;
+    j += 4-o;
+
+    #define e(a,b) mat.elm[((j+(b))%4)*4 + ((i+(a))%4)]
+
+    float inv =
+     + e(+1,-1)*e(+0,+0)*e(-1,+1)
+     + e(+1,+1)*e(+0,-1)*e(-1,+0)
+     + e(-1,-1)*e(+1,+0)*e(+0,+1)
+     - e(-1,-1)*e(+0,+0)*e(+1,+1)
+     - e(-1,+1)*e(+0,-1)*e(+1,+0)
+     - e(+1,-1)*e(-1,+0)*e(+0,+1);
+
+    return (o%2)?inv : -inv;
+
+    #undef e
+}
+
+	// Thanks to 'tea' at stackoverflow
+Matrix44 inverseMatrix4x4(Matrix44 mat)
+{
+
+    Matrix44 inv;
+
+    for(int i=0;i<4;i++)
+        for(int j=0;j<4;j++)
+            inv.m[i][j] = invf(i,j,mat);
+
+    double D = 0;
+
+    for(int k=0;k<4;k++) 
+		D += mat.m[k][0] * inv.m[0][k];
+
+    if (D == 0)
+		return Matrix44::MakeZeros();
+
+    float invD = float(1.0 / D);
+
+	mat = inv*invD;
+
+    return mat;
+}
+	Matrix44 Matrix44::Inverse( ) const
+	{
+		return inverseMatrix4x4( *this );
+	}
 
 	// --- Static functions ---
 

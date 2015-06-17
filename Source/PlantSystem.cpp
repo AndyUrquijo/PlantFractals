@@ -11,9 +11,9 @@
 using std::string;
 #include "WinApp.h"
 
-#define PLANT_AMOUNT 10
-#define COPY_AMOUNT 15
-#define FOREST_AREA 20
+#define PLANT_AMOUNT 7
+#define COPY_AMOUNT 12
+#define FOREST_AREA 16
 
 #define PLANT_SEPARATION 15
 #define CLONE_SEPARATION PLANT_SEPARATION*1
@@ -55,6 +55,7 @@ void PlantSystem::InitializeShaders()
 	drawLeavesShader.CompileProgram( );
 	drawLeavesShader.ObtainUniform( VP, "VP" );
 	drawLeavesShader.ObtainUniform( DISPLACEMENT, "DISPLACEMENT" );
+	drawLeavesShader.ObtainUniform( CAMERA_POS, "CAMERA_POS" );
 
 	updateShader.CreateProgram( );
 	updateShader.LoadShader( "PlantUpdate.cp", GL_COMPUTE_SHADER );
@@ -199,22 +200,30 @@ void PlantSystem::Render( )
 	SetAttribute(VERTEX_NORMAL,		3, 8, 4);
 	SetAttribute(VERTEX_DELAY,		1, 8, 7);
 
+
+
+
 	glLineWidth( 4.0f );
-	glUniformMatrix4fv( drawShader.GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
+	glUniformMatrix4fv( GLRenderer::GetShader( ).GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
 		plantArray[i].Draw( Plant::DRAW_BRANCHES );
 
-	/*
 
 	drawLeavesShader.Use( );
+
+	Vector3 camPos = GLRenderer::GetCameraPos();
+	glUniform3f( GLRenderer::GetShader( ).GetUniform( CAMERA_POS ), 
+				 camPos.x,
+				 camPos.y,
+				 camPos.z);
+
 	glLineWidth( 8.0f );
-	glUniformMatrix4fv( drawShader.GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
+	glUniformMatrix4fv( GLRenderer::GetShader( ).GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
 		plantArray[i].Draw( Plant::DRAW_LEAVES );
-
-	*/
+	
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
 }
