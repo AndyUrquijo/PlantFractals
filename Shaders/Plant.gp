@@ -2,6 +2,8 @@
 #version 430
 
 //#define LINE_TEST
+const float maxLevel = 8;
+
 
 uniform mat4 VP;
 
@@ -64,16 +66,8 @@ vec3 dNe[3];
 	vec3 r = (Re - Rs).xyz;
 
 	float wdt[2];
-	//wdt[0] = 5.0*exp(-2.5*vo_level[0]);
-	//wdt[1] = 5.0*exp(-2.5*vo_level[1]);
-	
-	//wdt[0] = length( r )*0.06;
-	//wdt[1] = length( r )*0.04;
-
-	float maxLevel = 8;
 	wdt[0] = (maxLevel - vo_level[0])*0.1;
 	wdt[1] = (maxLevel - vo_level[1])*0.1;
-
 
 
 	vec3 ru = normalize(r);

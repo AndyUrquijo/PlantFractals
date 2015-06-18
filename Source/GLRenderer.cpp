@@ -24,10 +24,8 @@ void GLRenderer::Initialize( void )
 {
 	glewInit( );
 
-	//glClearColor( 0.7f, 0.7f, 0.7f, 1.0f );
-	glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
-
-
+	glClearColor( 0.7f, 0.7f, 0.7f, 1.0f );
+	
 	InitializeObjects( );
 
 	GLText::InitializeText( );
@@ -55,7 +53,7 @@ void GLRenderer::InitializeObjects( void )
 {
 	plantSystem.Initialize( );
 
-	GLGeometry::QUAD_DESC quadDesc = { { 500, 500 } };
+	GLGeometry::QUAD_DESC quadDesc = { { 350, 350 } };
 	planeShape = GLGeometry::MakeQuad( quadDesc );
 
 }
@@ -85,7 +83,6 @@ void GLRenderer::Render( void )
 		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	else
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
 
 
 	camera.MoveCamera( );

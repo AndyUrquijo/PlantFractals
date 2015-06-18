@@ -18,10 +18,11 @@ void Camera::MoveCamera( )
 #define CAMERA_TOP_SPEED 150.0f
 #define CAMERA_ACCELERATION 400.0f
 #define CAMERA_FRICTION 300.0f
-#define CAMERA_TOP_ANGULAR_SPEED 20.0f
+#define CAMERA_TOP_ANGULAR_SPEED 0.080f
+#define CAMERA_TOP_ANGULAR_SPEED_PITCH 0.025f
 #define CAMERA_TOP_ANGULAR_SPEED_MOUSE 5.0f
-#define CAMERA_ANGULAR_ACCELERATION 1.0f
-#define CAMERA_FRICTION_TORQUE 0.5f
+#define CAMERA_ANGULAR_ACCELERATION 0.2f
+#define CAMERA_FRICTION_TORQUE 0.1f
 
 	static Clock clock;
 	float dt = (float) clock.Tick( );
@@ -85,7 +86,7 @@ void Camera::MoveCamera( )
 	}
 	prev = curr;
 
-	angularVelocity.x = Clamp( angularVelocity.x, -CAMERA_TOP_ANGULAR_SPEED, CAMERA_TOP_ANGULAR_SPEED );
+	angularVelocity.x = Clamp( angularVelocity.x, -CAMERA_TOP_ANGULAR_SPEED_PITCH, CAMERA_TOP_ANGULAR_SPEED_PITCH );
 	angularVelocity.y = Clamp( angularVelocity.y, -CAMERA_TOP_ANGULAR_SPEED, CAMERA_TOP_ANGULAR_SPEED );
 
 	float frictionTorque = CAMERA_FRICTION_TORQUE*dt;

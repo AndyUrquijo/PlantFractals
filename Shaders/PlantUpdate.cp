@@ -46,6 +46,8 @@ const vec3 wind = vec3(-1,0,0)*0.15;
 
 void main()
 {
+	// Initialize Variables
+
 	uint id = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y*100;
 	uint parentId = parentIndexData.indices[id];
 	float level = staticData.vertices[id].level;
@@ -56,6 +58,7 @@ void main()
 	vec3 R;
 	vec3 N;
 
+	
 	// Movement Simulation
 
 	float r = length(Ro);
@@ -78,19 +81,24 @@ void main()
 	float ar = acos( dot(Ro,R) / ( r*r ) );
 	N = rotate(No, a, pr);
 	
-	dynamicData.vertices[id].position = Ro;
+	// Copy to dynamic buffer
+
+	dynamicData.vertices[id].position = R;
 	dynamicData.vertices[id].normal = N;
 	dynamicData.vertices[id].level = level;
 	dynamicData.vertices[id].delay = delay;
 
 	
+
 	memoryBarrierBuffer();	// Hold until all simulation is done.
 	
+	/*
+	// Attempting to displace vertex data along tree hiearchy
 	vec3 Rp = staticData.vertices[parentId].position;
 	
 	Rp *= int(parentId != id);
 	dynamicData.vertices[id].position = R + Rp;
-	
+	*/
 	
 	
 }

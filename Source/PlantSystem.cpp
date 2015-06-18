@@ -11,9 +11,9 @@
 using std::string;
 #include "WinApp.h"
 
-#define PLANT_AMOUNT 7
-#define COPY_AMOUNT 12
-#define FOREST_AREA 16
+#define PLANT_AMOUNT 12
+#define COPY_AMOUNT 20
+#define FOREST_AREA 25
 
 #define PLANT_SEPARATION 15
 #define CLONE_SEPARATION PLANT_SEPARATION*1
@@ -161,6 +161,7 @@ void PlantSystem::Update( )
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
 		plantArray[i].UpdateObject( vertices );
 	
+
 	glUnmapBuffer( GL_ARRAY_BUFFER );
 	glBindBuffer( GL_ARRAY_BUFFER, NULL );
 #endif
@@ -203,7 +204,7 @@ void PlantSystem::Render( )
 
 
 
-	glLineWidth( 4.0f );
+	glLineWidth( 0.4f );
 	glUniformMatrix4fv( GLRenderer::GetShader( ).GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )
@@ -218,7 +219,7 @@ void PlantSystem::Render( )
 				 camPos.y,
 				 camPos.z);
 
-	glLineWidth( 8.0f );
+	glLineWidth( 4.0f );
 	glUniformMatrix4fv( GLRenderer::GetShader( ).GetUniform( VP ), 1, GL_FALSE, GLRenderer::GetViewProjectionMatrix( ).elm );
 
 	for ( size_t i = 0; i < plantArray.size( ); i++ )

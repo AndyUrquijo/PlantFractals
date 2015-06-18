@@ -21,19 +21,19 @@
 using Math::Vector3;
 
 
-#define LEAF_AMOUNT		4
+#define LEAF_AMOUNT		1
 #define LAST_LEVEL		7
 #define LEAF_LEVEL		LAST_LEVEL - 2
 #define BASE_LENGTH		10.0f
 #define APERTURE		0.18f*PI
 #define LEAF_LENGTH		1.0f	
-#define LEAF_WIDTH		0.4f	
+//#define LEAF_WIDTH		0.4f	
 
 
 /// Random ranges
 #define CHILD_AMOUNT		2,		4
 #define STRAIGHT_RATIO		0.8f,	1.0f
-#define TWIST_RATIO			0.5f,	0.7f
+#define TWIST_RATIO			0.4f,	0.7f
 #define DISTRIB_RATIO		0.0f,	1.0f
 #define APERTURE_RATIO		0.8f,	1.2f
 
@@ -79,8 +79,13 @@ PlantVertex Plant::Transform( const PlantVertex& vertex, uint index, uint count,
 			float theta = RangeRand( 0.0, 2 * PI );
 
 			Vector3 S = No.Rotate( theta, Ro.Normalize( ) ).Normalize( );
+
 			R = Ro.Rotate( phi, S ).Normalize( )*LEAF_LENGTH;
-			N = No.Rotate( phi, S ).Normalize( )*LEAF_WIDTH;
+			N = Vector3::RandomOrthonormal(R);
+			//N = R.Cross(Vector3::RIGHT).Normalize();
+			//R = Vector3(0.707f,0.707f,0)*LEAF_LENGTH;
+			//N = Vector3(-0.707f,0.707f,0);
+			
 			level = RangeRand( 0, 1 )*(-1);
 
 		} } break;
@@ -121,7 +126,7 @@ void Plant::Create( )
 	uint currLevelLeft = 1;
 	uint nextLevelCount = comp.childCount;
 
-	uint lastLevelIndex = 0;
+	uint firstLeafBranchIndex = 0;
 
 	//Create Branches
 
@@ -132,8 +137,8 @@ void Plant::Create( )
 			++level;
 			if ( level == LAST_LEVEL )
 				break;
-			else if ( !lastLevelIndex && level == LEAF_LEVEL )
-				lastLevelIndex = iComp;
+			else if ( !firstLeafBranchIndex && level == LEAF_LEVEL )
+				firstLeafBranchIndex = iComp;
 
 			currLevelLeft = nextLevelCount;
 			nextLevelCount = 0;
@@ -157,7 +162,7 @@ void Plant::Create( )
 	leavesIndex = (uint)components.size( );
 
 	// Add leaves as children of the modes on latest level
-	for ( uint iComp = lastLevelIndex; iComp < leavesIndex; iComp++ )
+	for ( uint iComp = firstLeafBranchIndex; iComp < leavesIndex; iComp++ )
 	{
 		//components[iComp].firstChildIndex = (int) components.size( );
 		//components[iComp].childCount = LEAF_AMOUNT;
@@ -265,6 +270,8 @@ void Plant::UpdateObject( PlantVertex* const vertices )
 		uint iParent = components[iComp].parentIndex;
 		vertices[bufferIndex + iComp].position += vertices[bufferIndex + iParent].position;
 	}
+
+	
 }
 
 

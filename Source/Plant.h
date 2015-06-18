@@ -34,21 +34,13 @@ class Plant
 
 	public:
 	std::vector<Component> components;		// Tree components containing its hiearchycal info
+	uint bufferIndex;
+	uint bufferLength;
 	uint leavesIndex;
 
 	static PlantSystem* system;
 
-
-
-	//std::vector<PlantVertex> staticData;	//Represents the tree in its state of equilibrium
-	//std::vector<PlantVertex> dynamicData;	//Represents the tree after being modified by external factors such as wind
-
-
-	uint bufferIndex;
-	uint bufferLength;
-	//GLuint	staticDataBuffer;
-
-	std::vector<Math::Vector3> locations;
+	std::vector<Math::Vector3> locations; // Stores the location for this plant's clones
 
 	//Creates the tree structure of Components and the buffer that will be used on the GPU
 	void Create( );

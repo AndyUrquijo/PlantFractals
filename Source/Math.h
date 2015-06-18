@@ -159,6 +159,15 @@ namespace Math
 
 		static Vector3 Randomize( const Vector3& min, const Vector3& max );
 		static Vector3 Randomize( const Vector2& xRange, const Vector2& yRange, const Vector2& zRange );
+
+		static Vector3 RandomOrthonormal( const Vector3& normal );
+
+		static const Vector3 UP;
+		static const Vector3 RIGHT;
+		static const Vector3 FORWARD;
+		static const Vector3 DOWN;
+		static const Vector3 LEFT;
+		static const Vector3 BACKWARD;
 	};
 
 	Vector3 operator*( float scalar, const Vector3& vector );

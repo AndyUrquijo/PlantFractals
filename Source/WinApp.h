@@ -28,4 +28,8 @@ struct WinApp
 
 	static void InitializeOpenGL();
 	static void InitializeExtensions();
+
+	static bool Update();
+	static LRESULT WinApp::WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam );
+
 };

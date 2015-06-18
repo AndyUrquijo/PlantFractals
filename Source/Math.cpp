@@ -98,6 +98,14 @@ namespace Math
 	// ---------------
 
 
+	const Vector3 Vector3::UP = { 0, 1, 0 };
+	const Vector3 Vector3::RIGHT = { 1, 0, 0 };
+	const Vector3 Vector3::FORWARD = { 0, 0, 1 };
+	const Vector3 Vector3::DOWN = { 0, -1, 0 };
+	const Vector3 Vector3::LEFT = { -1, 0, 0 };
+	const Vector3 Vector3::BACKWARD = { 0, 0, -1 };
+
+
 	Vector3::Vector3( )
 	{
 		x = 0;
@@ -201,6 +209,21 @@ namespace Math
 	{
 		return Randomize( { xRange.x, yRange.x, zRange.x }, { xRange.y, yRange.y, zRange.y } );
 	}
+
+	Vector3 Vector3::RandomOrthonormal( const Vector3& _normal )
+	{
+		Vector3 normal = _normal.Normalize();
+		Vector3 perp;
+		Vector3 aux = UP;
+		if( abs(normal*UP) > 0.7 )
+			aux = RIGHT;
+			
+		perp = normal.Cross(aux).Normalize();
+
+		float angle = RangeRand(0,2*PI);
+		return perp.Rotate(0, normal);
+	}
+
 
 	// --- Global functions ---
 

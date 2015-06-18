@@ -144,3 +144,24 @@ void WinApp::InitializeOpenGL( )
 	
 	if(fail) ShowErrorMessage(L"OpenGL could not be initialized");
 }
+
+
+bool WinApp::Update( )
+{
+	if ( GetAsyncKeyState( VK_ESCAPE ) )
+		return false;
+
+	return true;
+}
+
+
+LRESULT WinApp::WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+	switch ( message )
+	{
+	case WM_DESTROY:
+		PostQuitMessage( 0 );
+		break;
+	}
+	return DefWindowProc( hWnd, message, wParam, lParam );
+}

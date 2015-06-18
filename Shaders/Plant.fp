@@ -5,20 +5,22 @@
 in vec3 go_normal;
 in vec3 go_color;
 
+const float amb_val = 0.3f;
+const float dif_val = 0.7f;
+
 const vec3 dirLight = normalize(vec3(1,1,0));
-//const vec3 fogColor = vec3(0.7,0.7,0.7);
-const vec3 fogColor = vec3(0.1,0.1,0.1);
+const vec3 fogColor = vec3(0.7,0.7,0.7);
 
 void main()
 {
 
 
-	float ambient = 0.5;
+	float ambient = amb_val;
 
 
 	float diffuse = dot( normalize(go_normal), dirLight);
 	//diffuse = (diffuse + 1.0)/1.5;
-	diffuse = clamp(diffuse,0.0,1.0)*0.5;
+	diffuse = clamp(diffuse,0.0,1.0)*dif_val;
 
 	float factor = (ambient + diffuse);
 	//factor = floor(factor*3)/3;

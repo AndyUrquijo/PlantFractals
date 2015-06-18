@@ -2,10 +2,8 @@
 
 #define FOG_DIST 1000
 
-//const vec3 color = vec3(0.35,0.24,0.14)*0.5;
-const vec3 color = vec3(0.1,0.1,0.1);
-//const vec3 fogColor = vec3(0.7,0.7,0.7);
-const vec3 fogColor = vec3(0.1,0.1,0.1);
+const vec3 color = vec3(0.35,0.24,0.14)*0.5;
+const vec3 fogColor = vec3(0.7,0.7,0.7);
 
 void main()
 {

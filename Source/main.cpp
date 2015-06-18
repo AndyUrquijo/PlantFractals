@@ -8,26 +8,14 @@
 #define GLEW_STATIC
 #endif
 #pragma comment(lib,"GL/glew32.lib")
-LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-	switch ( message )
-	{
-	//case WM_PAINT:
-	//	GLRenderer::GetInstance( ).Render( );
-	//	break;
-	case WM_DESTROY:
-		PostQuitMessage( 0 );
-		break;
-	}
-	return DefWindowProc( hWnd, message, wParam, lParam );
-}
+
 
 
 int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int )
 {
 	srand( unsigned int( time( 0 ) ) );
 
-	WinApp::CreateApp( hInstance, (WNDPROC) WndProc );
+	WinApp::CreateApp( hInstance, (WNDPROC) WinApp::WndProc );
 	GLRenderer& renderer = GLRenderer::GetInstance( );
 	renderer.Initialize( );
 
@@ -39,8 +27,11 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int )
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
 		}
-		else
-			renderer.Render( );
+			
+		bool appOn = WinApp::Update();
+		if( !appOn )
+			break;
+		renderer.Render( );
 	}
 
 	renderer.Terminate( );

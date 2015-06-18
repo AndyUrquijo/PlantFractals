@@ -42,16 +42,20 @@ bool IsOutOfView( vec2 v )
 
 void main()
 {
+	// 3 vertices are received:
+	// 0: branch start data
+	// 1: branch end data
+	// 2: leaf data
 
 	vec4 Bs = vec4(gl_in[0].gl_Position.xyz,1);		// branch start
 	vec4 Be = vec4(gl_in[1].gl_Position.xyz,1);		// branch end
 
-	vec4 Rs = Bs + (Be - Bs)*vo_level[2]*(-1); // leaf start
-	//vec4 Rs = Bs;
 	vec3 L = normalize(gl_in[2].gl_Position.xyz); // leaf stem vector
+	
+	vec4 Rs = Bs + (Be - Bs)*vo_level[2]*(-1); // leaf start
 	vec4 Re = Rs + vec4(L,0); // leaf end
 
-	vec3 N = vo_normal[2]; //end normal
+	vec3 N = normalize(vo_normal[2]); //end normal
 	vec3 T = normalize(cross(L,N));
 
 #ifdef LINE_TEST
@@ -101,22 +105,26 @@ void main()
 	corners[2] = VP * (Rm + dRp); 
 	corners[3] = VP * (Rm - dRp); 
 	
-	vec3 toCam = Rm - (-CAMERA_POS); // HAX: Camera seems to be... backwards?
+	vec3 toCam = Rm - CAMERA_POS; 
 
-	float N_sign = (dot(N, toCam) > 0 ? 0: 1)*2 - 1;
-	go_normal = N*N_sign;
+	if(dot(N, toCam) > 0)
+		N *= -1;   // Turn leaf's normal to face towards camera when back face is shown
 	
+
 	//Leaf
+	go_normal = N*0.8 + T*0.2;
 	go_color = colorLeafB;
 	gl_Position = corners[3];
 	EmitVertex();
 
+	go_normal = N;
 	go_color = colorLeafA;
 	gl_Position = corners[0];
 	EmitVertex();
 	gl_Position = corners[1];
 	EmitVertex();
 
+	go_normal = N*0.8 - T*0.2;
 	go_color = colorLeafB;
 	gl_Position = corners[2];
 	EmitVertex();
