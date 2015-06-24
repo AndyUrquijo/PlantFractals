@@ -1,0 +1,21 @@
+#version 110
+
+uniform vec3 DISPLACEMENT;
+
+attribute vec3 _position;
+attribute float _level;
+attribute vec3 _normal; 
+attribute float _delay;
+
+out float vo_level;
+out vec3 vo_normal;
+out float vo_delay;
+
+void main()
+{
+	vo_level = _level;
+	vo_delay = _delay;
+
+	gl_Position = vec4(_position.xyz + DISPLACEMENT*int(vo_level>0), 1);
+	vo_normal = _normal.xyz;
+}

@@ -7,7 +7,7 @@
 #ifndef GLEW_STATIC
 #define GLEW_STATIC
 #endif
-#pragma comment(lib,"GL/glew32.lib")
+#pragma comment(lib,"glew32.lib")
 
 
 

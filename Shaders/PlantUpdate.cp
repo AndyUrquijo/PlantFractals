@@ -43,6 +43,7 @@ vec3 rotate( vec3 v, float angle, const vec3 w )
 }
 
 const vec3 wind = vec3(-1,0,0)*0.15;
+const float PI = 3.14159265;
 
 void main()
 {
@@ -71,7 +72,8 @@ void main()
 
 	vec3 n = normalize( cross( Ro, Wo ) );	//unit vector normal to Rp and Wo
 	float w = 10.0 / r;		//oscilation frequency
-
+	float w_max = 2*PI/0.5;
+	w = min(w, w_max);
 
 	float a = 0.3*Ao*sin( delay + w*TIME );
 	R = rotate(Wo, a, n );

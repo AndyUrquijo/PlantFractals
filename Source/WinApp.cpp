@@ -15,6 +15,20 @@ HWND		WinApp::window;
 HDC			WinApp::deviceContext;
 HGLRC		WinApp::renderContext;
 
+PIXELFORMATDESCRIPTOR GetPixelFormatDescriptor( )
+{
+	PIXELFORMATDESCRIPTOR pfDesc = { };
+	pfDesc.nSize = sizeof( pfDesc );
+	pfDesc.nVersion = 1;
+	pfDesc.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	pfDesc.iPixelType = PFD_TYPE_RGBA;
+	pfDesc.cColorBits = 24;
+	pfDesc.cDepthBits = 16;
+	pfDesc.iLayerType = PFD_MAIN_PLANE;
+
+	return pfDesc;
+}
+
 void WinApp::CreateApp( HINSTANCE hinst, WNDPROC proc )
 {
 	application = hinst;
@@ -22,8 +36,7 @@ void WinApp::CreateApp( HINSTANCE hinst, WNDPROC proc )
 
 	InitializeExtensions( );
 
-	WNDCLASSEX  wndClass;
-	ZeroMemory( &wndClass, sizeof( wndClass ) );
+	WNDCLASSEX  wndClass = { };
 	wndClass.cbSize = sizeof( WNDCLASSEX );
 	wndClass.lpfnWndProc = appWndProc;
 	wndClass.lpszClassName = L"Fractals";
@@ -69,10 +82,15 @@ HRESULT WinApp::ShowErrorMessage( HRESULT hr, PCWSTR message, PCWSTR title )
 void WinApp::InitializeExtensions( )
 {
 	BOOL fail = FALSE;
+
 	HDC tempDC = GetDC( NULL );
 
-	PIXELFORMATDESCRIPTOR pfDesc = { sizeof( pfDesc ) };
-	fail |=!	SetPixelFormat( tempDC, 1, &pfDesc );
+	PIXELFORMATDESCRIPTOR pfDesc = GetPixelFormatDescriptor();
+	
+	int iPixelFormat = ChoosePixelFormat(tempDC, &pfDesc);
+	DWORD error = GetLastError();
+
+	fail |=!	SetPixelFormat( tempDC, iPixelFormat, &pfDesc );
 
 	HGLRC tempRC = wglCreateContext( tempDC );
 	fail |=!	wglMakeCurrent( tempDC, tempRC );
@@ -104,12 +122,12 @@ void WinApp::InitializeOpenGL( )
 		WGL_DRAW_TO_WINDOW_ARB, 1, // pf that can run a window
 		//WGL_ACCELERATION_ARB,   1, // must be HW accelerated
 		WGL_COLOR_BITS_ARB, 24, // 8 bits of each R, G and B
-		WGL_DEPTH_BITS_ARB, 8, // 16 bits of depth precision for window
+		WGL_DEPTH_BITS_ARB, 16, // 16 bits of depth precision for window
 		WGL_DOUBLE_BUFFER_ARB, GL_TRUE, // Double buffered context
 		WGL_SAMPLE_BUFFERS_ARB, GL_TRUE, // MSAA on
 		WGL_SAMPLES_ARB, NUM_SAMPLES, // 8x MSAA 
 		WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB, // pf should be RGBA type
-		WGL_STENCIL_BITS_ARB, 8,
+		WGL_STENCIL_BITS_ARB, 0,
 		0 }; // NULL termination
 
 	// Ask OpenGL to find the most relevant format matching our attribs
@@ -122,14 +140,7 @@ void WinApp::InitializeOpenGL( )
 	fail |=!	wglGetPixelFormatAttribivARB( deviceContext, nPixelFormat, 0, 1, attrib, &nResults );
 
 
-	PIXELFORMATDESCRIPTOR pfDesc = { 0 };
-	pfDesc.nSize = sizeof( pfDesc );
-	pfDesc.nVersion = 1;
-	pfDesc.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-	pfDesc.iPixelType = PFD_TYPE_RGBA;
-	pfDesc.cColorBits = 24;
-	pfDesc.cDepthBits = 16;
-	pfDesc.iLayerType = PFD_MAIN_PLANE;
+	PIXELFORMATDESCRIPTOR pfDesc = GetPixelFormatDescriptor();
 
 	// Got a format, now set it as the current one
 	fail |=!	SetPixelFormat( deviceContext, nPixelFormat, &pfDesc );
