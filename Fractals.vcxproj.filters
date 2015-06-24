@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Source\MatrixStack.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Source\GLObject.cpp">
       <Filter>Source\Graphics Engine\Geometry</Filter>
     </ClCompile>
@@ -58,11 +55,11 @@
     <ClCompile Include="Source\GLUtil.cpp">
       <Filter>Source\Graphics Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Source\MatrixStack.cpp">
+      <Filter>Source\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\MatrixStack.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="Source\GLObjectSystem.h">
       <Filter>Source\Graphics Engine\Geometry</Filter>
     </ClInclude>
@@ -117,6 +114,9 @@
     <ClInclude Include="Source\GLUtil.h">
       <Filter>Source\Graphics Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Source\MatrixStack.h">
+      <Filter>Source\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -140,49 +140,64 @@
     <Filter Include="Source\Plants">
       <UniqueIdentifier>{1a5813fd-841e-4458-aca9-6603ef2b99fb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\test">
+    <Filter Include="Shaders\Plant">
+      <UniqueIdentifier>{19b5c243-6b24-4fbd-b7fe-3a4d43f5a6ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Leaf">
+      <UniqueIdentifier>{87b68497-fd6a-4b5b-9b12-45bd7800e642}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Test">
       <UniqueIdentifier>{2f0348ce-561d-46c1-8c79-f636832febd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Plain">
+      <UniqueIdentifier>{fd26bf89-83d0-43f5-a5ad-7f926640c022}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Text">
+      <UniqueIdentifier>{dde5df43-9fcf-4281-8e00-28a2aaaba1e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\PlantUpdate">
+      <UniqueIdentifier>{0902e357-d39f-4f7e-be71-51d93aa45334}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\Plant.fp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Plant.gp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Plant.vp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Text.vp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Text.fp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\PlantUpdate.cp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Leaf.gp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Leaf.fp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Plain.fp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Plain.vp">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\Test.cp">
-      <Filter>Shaders\test</Filter>
+      <Filter>Shaders\Test</Filter>
     </None>
     <None Include="Shaders\Test.fp">
-      <Filter>Shaders\test</Filter>
+      <Filter>Shaders\Test</Filter>
     </None>
     <None Include="Shaders\Test.vp">
-      <Filter>Shaders\test</Filter>
+      <Filter>Shaders\Test</Filter>
+    </None>
+    <None Include="Shaders\Plant.vp">
+      <Filter>Shaders\Plant</Filter>
+    </None>
+    <None Include="Shaders\Plant.fp">
+      <Filter>Shaders\Plant</Filter>
+    </None>
+    <None Include="Shaders\Plant.gp">
+      <Filter>Shaders\Plant</Filter>
+    </None>
+    <None Include="Shaders\Leaf.gp">
+      <Filter>Shaders\Leaf</Filter>
+    </None>
+    <None Include="Shaders\Leaf.fp">
+      <Filter>Shaders\Leaf</Filter>
+    </None>
+    <None Include="Shaders\Plain.vp">
+      <Filter>Shaders\Plain</Filter>
+    </None>
+    <None Include="Shaders\Plain.fp">
+      <Filter>Shaders\Plain</Filter>
+    </None>
+    <None Include="Shaders\Text.vp">
+      <Filter>Shaders\Text</Filter>
+    </None>
+    <None Include="Shaders\Text.fp">
+      <Filter>Shaders\Text</Filter>
+    </None>
+    <None Include="Shaders\PlantUpdate.cp">
+      <Filter>Shaders\PlantUpdate</Filter>
     </None>
   </ItemGroup>
 </Project>

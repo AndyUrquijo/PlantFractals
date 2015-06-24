@@ -69,6 +69,9 @@ vec3 dNe[3];
 	wdt[0] = (maxLevel - vo_level[0])*0.1;
 	wdt[1] = (maxLevel - vo_level[1])*0.1;
 
+	wdt[0] = 12.0*exp(-1.0 -0.7*vo_level[0]);
+	wdt[1] = 12.0*exp(-1.0 -0.7*vo_level[1]);
+
 
 	vec3 ru = normalize(r);
 	

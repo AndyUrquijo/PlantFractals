@@ -15,7 +15,9 @@ class PlantSystem
 	GLShader updateShader; 
 	GLShader drawShader; 
 	GLShader drawLeavesShader; 
-	
+
+	GLuint trunkTex;
+
 	public:
 
 	std::vector<PlantVertex> vertexData;

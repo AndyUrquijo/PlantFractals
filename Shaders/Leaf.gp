@@ -88,7 +88,7 @@ void main()
 	float wdt = 1.0;
 	vec4 Rr = vec4(mix(Rs, Re, 0.1).xyz, 1);
 	vec4 Rm = vec4(mix(Rr, Re, 0.3).xyz, 1);
-	vec4 dRp = vec4(T*0.7, 0);
+	vec4 dRp = vec4(T*0.4, 0);
 
 	vec3 ru = normalize(r);
 

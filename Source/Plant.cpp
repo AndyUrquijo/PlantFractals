@@ -21,12 +21,12 @@
 using Math::Vector3;
 
 
-#define LEAF_AMOUNT		1
+#define LEAF_AMOUNT		2
 #define LAST_LEVEL		7
 #define LEAF_LEVEL		LAST_LEVEL - 2
 #define BASE_LENGTH		10.0f
 #define APERTURE		0.18f*PI
-#define LEAF_LENGTH		1.0f	
+#define LEAF_LENGTH		0.2f	
 //#define LEAF_WIDTH		0.4f	
 
 

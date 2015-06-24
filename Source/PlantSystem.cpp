@@ -10,10 +10,11 @@
 #include <string>
 using std::string;
 #include "WinApp.h"
+#include "GLImageLoader.h"
 
-#define PLANT_AMOUNT 12
+#define PLANT_AMOUNT 7
 #define COPY_AMOUNT 20
-#define FOREST_AREA 25
+#define FOREST_AREA 20
 
 #define PLANT_SEPARATION 15
 #define CLONE_SEPARATION PLANT_SEPARATION*1
@@ -27,6 +28,8 @@ void PlantSystem::Initialize( )
 	InitializeShaders();
 	InitializePlants();
 	InitializeBuffers();
+
+	trunkTex = GLImageLoader::LoadImage("trunk.bmp", IMAGE_FORMAT_BMP);
 
 }
 
@@ -201,7 +204,7 @@ void PlantSystem::Render( )
 	SetAttribute(VERTEX_NORMAL,		3, 8, 4);
 	SetAttribute(VERTEX_DELAY,		1, 8, 7);
 
-
+	glBindTexture(GL_TEXTURE_2D, trunkTex);
 
 
 	glLineWidth( 0.4f );

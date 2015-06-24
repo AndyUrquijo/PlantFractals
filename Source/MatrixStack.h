@@ -7,7 +7,7 @@ class GLMatrixStack;
 
 #include <stack>
 using std::stack;
-//Wrapper class to Richard Wright's Matrix Stack. To be replaced with own code.
+
 class MatrixStack
 {
 	

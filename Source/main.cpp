@@ -27,11 +27,13 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int )
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
 		}
-			
-		bool appOn = WinApp::Update();
-		if( !appOn )
-			break;
-		renderer.Render( );
+		else
+		{
+			bool appOn = WinApp::Update( );
+			if ( !appOn )
+				break;
+			renderer.Render( );
+		}
 	}
 
 	renderer.Terminate( );
